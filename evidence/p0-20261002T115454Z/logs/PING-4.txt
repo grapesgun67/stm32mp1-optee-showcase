@@ -1,0 +1,16 @@
+$ portfolio-hello --ping 4
+ping: result=0x00000000 origin=0x00000004
+CA : ping(1)
+TA : ping_cnt(1)
+ping: result=0x00000000 origin=0x00000004
+CA : ping(2)
+TA : ping_cnt(2)
+ping: result=0x00000000 origin=0x00000004
+CA : ping(3)
+TA : ping_cnt(3)
+ping: result=0x00000000 origin=0x00000004
+CA : ping(4)
+TA : ping_cnt(4)
+PASS: 4 PING calls counted
+
+process exit=0

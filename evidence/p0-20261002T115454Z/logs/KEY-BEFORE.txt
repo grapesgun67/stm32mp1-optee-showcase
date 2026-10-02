@@ -1,0 +1,8 @@
+$ portfolio-hello --sign-public-key
+GET_PUBLIC_KEY: result=0x00000000 origin=0x00000004
+RSA modulus (hex): [공개키 값 생략; 비교 지문은 결과표 참조]
+RSA exponent (hex): [공개키 값 생략; 비교 지문은 결과표 참조]
+
+process exit=0
+
+public key SHA256(n || e): ffdaa92c3599bf82e9dd84d310dc7e43e4d4a5ec6750a0d823150f2db5c9c0a5

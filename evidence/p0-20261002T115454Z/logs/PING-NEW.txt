@@ -1,0 +1,7 @@
+$ portfolio-hello --ping 1
+ping: result=0x00000000 origin=0x00000004
+CA : ping(1)
+TA : ping_cnt(1)
+PASS: 1 PING calls counted
+
+process exit=0

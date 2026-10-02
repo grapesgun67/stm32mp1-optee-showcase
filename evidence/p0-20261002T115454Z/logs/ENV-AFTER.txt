@@ -1,0 +1,7 @@
+$ dpkg-query -W portfolio-hello; systemctl is-active tee-supplicant.service; sha256sum /usr/bin/portfolio-hello /usr/lib/optee_armtz/12694b3a-c0af-4915-bf39-a819770b8355.ta
+portfolio-hello	1.0-r0.10
+active
+be5098269436f7ec177f0b23755ca04742fda4aaa679a5c8c069aa723ab410c6  /usr/bin/portfolio-hello
+52a0436a3bfa3b0d61105918e162a20569ffd10df3357539e527739c19137982  /usr/lib/optee_armtz/12694b3a-c0af-4915-bf39-a819770b8355.ta
+
+process exit=0

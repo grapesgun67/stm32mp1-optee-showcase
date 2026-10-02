@@ -1,0 +1,6 @@
+.local/
+_site/
+__pycache__/
+*.pyc
+*.pem
+*.key

@@ -1,0 +1,257 @@
+# P0 시험 절차 기록
+
+이 문서는 기존 개발 환경에서 사용한 절차를 설명한다. 공개 저장소에는 CA/TA 소스나 승인 도구·개인키가 없으므로 공개 저장소 clone만으로 아래 명령을 실행할 수 있는 것은 아니다.
+
+2026-10-02. **지금은 이 문서만 위에서부터 진행하면 된다.** 비공개 개발 저장소의 상세 문서는 그대로 보존하며 심화 시험 참고용으로 둔다.
+
+최신 소스로 만든 CA/TA 패키지를 보드에 설치했고 정상 승인 서명까지 실행했던 상태를 전제로 한다. 문서만 바뀌었다면 다시 빌드하지 않는다. 설치한 패키지와 현재 소스가 같은지는 확인되지 않았다면 그대로 미확인으로 기록한다.
+
+이번에는 다음 준비를 **생략한다**.
+
+- 과거 커밋 조회/이동, 단계별 재빌드·재설치
+- 시험용 CA 추가 개발
+- RUN_ID, RAW_DIR, record_case 등의 기록 자동화
+- 웹사이트 제작과 배포
+
+진행 순서: **① 환경 → ② 기초 기능 → ③ 정상 승인 → ④ 승인 거부 → ⑤ 재부팅 키 비교 → ⑥ 결과 정리**.
+
+공통 규칙은 하나다. **명령을 한 개씩 실행하고 프로그램 종료 직후 `echo $?`를 확인한다. 명령·출력·종료 코드가 보이게 캡처하고, 같은 출력도 텍스트로 저장한다.** UART 터미널의 로그 저장 기능을 켜두면 편하다. 승인 대기 중에는 Enter 외의 다음 명령을 붙여 넣지 않는다.
+
+## 1. 보드 환경 — 캡처 1장
+
+보드에서 실행한다.
+
+```sh
+uname -a
+cat /etc/os-release
+dpkg-query -W portfolio-hello
+systemctl is-active tee-supplicant.service
+```
+
+**확인:** 설치된 패키지 버전, 서비스 `active`. 실물 보드 사진이 있으면 함께 사용한다.
+
+**캡션:** “STM32MP157F-DK2 실물 보드에 Yocto 패키지 배포, TEE 서비스 동작 확인.”
+
+## 2. PING·ECHO·HASH — 기능별 캡처
+
+아래는 모두 **보드 명령**이다. 각 명령 직후 `echo $?`를 실행한다.
+
+### 세션 카운터
+
+```sh
+portfolio-hello --ping 4
+echo $?
+portfolio-hello --ping 1
+echo $?
+```
+
+**확인:** 첫 실행은 카운터 1→4, 다음 실행은 다시 1. 두 종료 코드 모두 0.
+
+**캡션:** “같은 세션에서 상태가 누적되고 새 실행에서는 카운터가 다시 시작한다.” 최초 COUNT=0 직접 조회나 동시 세션 분리까지 시험한 것은 아니다.
+
+### 버퍼 전달과 오류 처리
+
+```sh
+portfolio-hello --echo hello
+echo $?
+portfolio-hello --echo ""
+echo $?
+portfolio-hello --echo 1234567890123456
+echo $?
+portfolio-hello --bad-command
+echo $?
+portfolio-hello --bad-types
+echo $?
+```
+
+**확인:** ECHO의 내용·길이가 같고, 잘못된 명령/타입은 예상대로 거부했다는 PASS. 모두 종료 코드 0이다. 마지막 두 명령은 “예상 오류를 확인한 시험 자체”가 성공해서 0이다.
+
+**캡션:** “문자열 버퍼 왕복 및 잘못된 명령·PING 파라미터 타입 거부 확인.” 모든 API의 타입 검사를 시험했다고 적지 않는다.
+
+### 분할 SHA-256
+
+```sh
+printf '%s' test | sha256sum
+portfolio-hello --hash test 1
+echo $?
+portfolio-hello --hash test 2
+echo $?
+portfolio-hello --hash test 4
+echo $?
+```
+
+**확인:** 세 SHA256 출력이 sha256sum의 값과 모두 같고 종료 코드 0. 한 화면에서 네 값을 비교할 수 있게 캡처한다.
+
+**캡션:** “입력을 1·2·4바이트로 나눠 전달해도 같은 SHA-256 결과.”
+
+## 3. 정상 승인 — 보드와 노트북을 나란히 캡처
+
+여기부터는 **보드 터미널과 노트북 WSL 터미널 두 개**를 사용한다. 보드는 요청 후 기다리고, 노트북에서 승인 파일을 보내준 뒤 보드에서 Enter를 누른다.
+
+아래 파일명은 새 시험용이다. 이미 존재하면 삭제하지 말고 해당 시험의 번호를 다른 번호로 바꾼다. 보드와 노트북의 관련 파일명을 동일하게 바꿔야 한다.
+
+노트북에서 한 번 준비한다. IP와 KEY_ID는 기존 정상 시험에서 사용한 값이다. KEY_ID는 TA 데이터 서명키의 지문이며, 받은 임의 요청에서 추출한 값을 검증 없이 신뢰 기준으로 삼지 않는다.
+
+```bash
+cd <로컬-개발-저장소-경로>
+read -r -p '보드 IP: ' BOARD_IP
+read -r -p '기존에 신뢰 등록한 TA 데이터 키 ID (64자리 hex): ' KEY_ID
+mkdir -p .local/approval
+printf '%s' test > .local/approval/p0-message.bin
+```
+
+기존 승인 개인키 `.local/approval/approver-private.pem`을 사용한다. 새 키를 만들 필요 없다. 새 노트북 터미널을 열면 저장소 경로로 이동하고 BOARD_IP/KEY_ID만 다시 설정한다. 여기서는 env.sh를 실행하지 않는다.
+
+**보드:** 실행 후 기다린다.
+
+```sh
+portfolio-hello --sign test /tmp/p0-request-101.bin /tmp/p0-approval-101.sig
+```
+
+**노트북:** 요청을 가져와 승인한다.
+
+```bash
+scp "root@$BOARD_IP:/tmp/p0-request-101.bin" .local/approval/
+python3 scripts/approve-request.py \
+    --request .local/approval/p0-request-101.bin \
+    --message .local/approval/p0-message.bin \
+    --expected-key-id "$KEY_ID" \
+    --private-key .local/approval/approver-private.pem \
+    --out .local/approval/p0-approval-101.sig
+```
+
+화면을 확인하고 `APPROVE`를 입력한다. 개인키 암호는 로컬 프롬프트에만 입력한다. 생성 성공 후 전송한다.
+
+```bash
+scp .local/approval/p0-approval-101.sig "root@$BOARD_IP:/tmp/p0-approval-101.sig"
+```
+
+**보드:** Enter를 누르고 프로그램이 끝나면 `echo $?`.
+
+**확인:** SIGN_AUTHORIZED result=0, original verified PASS, altered rejected PASS, 종료 코드 0.
+
+**캡션:** “외부 승인 서명을 TA에서 검증한 뒤 데이터 서명 수행, CA에서 원본 검증 및 변경 데이터 거부 확인.”
+
+## 4. 잘못된 승인은 거부되는가? — 세 결과 캡처
+
+각 시험은 이전 보드 프로그램이 종료된 뒤 시작한다. **TA의 SIGN_AUTHORIZED 오류가 보여야 한다.** 파일 복사/읽기 실패만 나왔다면 승인 검증 시험 결과가 아니다.
+
+### A. 승인 서명 변조
+
+3절의 명령에서 **101을 모두 102로 바꿔** 새 요청을 만들고 정상 승인 파일 생성까지 한다. 보드에는 아직 전송하지 않는다.
+
+노트북에서 정상 파일의 사본 1바이트를 바꾼 뒤 전송한다.
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+b = bytearray(Path('.local/approval/p0-approval-102.sig').read_bytes())
+assert len(b) == 256
+b[0] ^= 1
+with Path('.local/approval/p0-tampered-102.sig').open('xb') as f:
+    f.write(b)
+PY
+scp .local/approval/p0-tampered-102.sig "root@$BOARD_IP:/tmp/p0-approval-102.sig"
+```
+
+보드에서 Enter 후 `echo $?`.
+
+**확인:** TA 검증 실패, 프로그램 종료 코드 nonzero. 이는 예상한 거부이므로 시험은 성공이다.
+
+### B. 다른 승인키
+
+노트북에서 시험용 별도 키를 생성한다. 기존 정상 승인키와 TA 공개키는 변경하지 않는다.
+
+```bash
+umask 077
+if [ ! -e .local/approval/p0-wrong-private.pem ]; then
+    openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 \
+        -aes-256-cbc -out .local/approval/p0-wrong-private.pem
+fi
+openssl pkey -in .local/approval/p0-wrong-private.pem -check -noout
+```
+
+키 생성/확인이 실패하면 여기서 해결하고 다음으로 진행한다. 3절에서 **101을 모두 103으로 바꾸고**, 승인 명령의 `--private-key`만 `.local/approval/p0-wrong-private.pem`으로 바꿔 실행한다. KEY_ID는 바꾸지 않는다.
+
+서명 파일 전송 후 보드에서 Enter, 종료 뒤 `echo $?`.
+
+**확인:** 다른 키로 만든 승인은 TA가 거부하고 종료 코드 nonzero.
+
+### C. 과거 승인 재사용
+
+보드에서 새 요청:
+
+```sh
+portfolio-hello --sign test /tmp/p0-request-104.bin /tmp/p0-approval-104.sig
+```
+
+노트북에서 새로 승인하지 않고 **3절에서 성공했던 101 승인**을 보낸다.
+
+```bash
+scp .local/approval/p0-approval-101.sig "root@$BOARD_IP:/tmp/p0-approval-104.sig"
+```
+
+보드에서 Enter 후 `echo $?`.
+
+**확인:** 새 챌린지에 과거 승인이 맞지 않아 TA 거부, 종료 코드 nonzero.
+
+**세 시험의 캡션:** “승인 서명 변조·미등록 승인키·새 요청에 과거 승인 재사용을 TA에서 거부.” 같은 세션에서 두 번 제출한 시험과는 다르다.
+
+## 5. 재부팅 전후 키 비교 — 비교 결과 캡처
+
+보드에서 다른 CA가 대기 중이지 않은 상태로 진행한다. 아래 디렉터리가 이미 있으면 새 이름을 쓰고 재부팅 후에도 같은 경로를 사용한다.
+
+```sh
+mkdir /home/root/p0-key-check
+portfolio-hello --sign-public-key > /home/root/p0-key-check/before.txt
+echo $?
+cat /home/root/p0-key-check/before.txt
+```
+
+**조회 종료 코드 0과 RSA modulus/exponent 값이 실제로 출력됐는지 확인한다.** 키가 없거나 조회에 실패했다면 재부팅 비교를 진행하지 않는다. UART 로그 저장을 켠 뒤:
+
+```sh
+sync
+reboot
+```
+
+부팅 후 보드에서:
+
+```sh
+portfolio-hello --sign-public-key > /home/root/p0-key-check/after.txt
+echo $?
+cat /home/root/p0-key-check/after.txt
+cmp /home/root/p0-key-check/before.txt /home/root/p0-key-check/after.txt
+echo $?
+```
+
+**확인:** 두 조회가 성공하고 내용이 있으며, cmp 무출력과 종료 코드 0. cmp가 다르다면 자동으로 키 변경이라고 단정하지 말고 두 출력의 차이를 확인한다. 가능하면 3절 정상 승인을 새 번호 105로 반복하여 재부팅 후에도 승인 서명이 되는지 확인한다.
+
+**캡션:** “재부팅 전후 공개키 출력 동일 확인.” 여기까지로 저장소 롤백 방지나 재부팅 전 공개키를 직접 입력한 서명 검증까지 입증하지 않는다. REE FS 단조 카운터 경고는 미해결 사항으로 남긴다.
+
+## 6. 결과를 포트폴리오 한 페이지로 정리
+
+이번에는 아래 5개 화면 묶음과 텍스트 로그만 준비한다. 기존 키·원본 로그는 보존하고 개인키/암호가 보이는 화면은 공개하지 않는다.
+
+| 화면 | 보여줄 것 |
+|---|---|
+| 환경 | 보드 사진, OS·패키지 버전, tee-supplicant active |
+| 기초 기능 | PING 새 실행, ECHO, 분할 HASH 동일 결과 |
+| 정상 승인 | 노트북 APPROVE → TA 성공 → CA 검증 |
+| 승인 거부 | 변조·다른 키·재사용의 실제 거부 결과 |
+| 키 유지 | 재부팅 전후 공개키 비교, cmp 종료 코드 |
+
+문서 구성은 **목표 한 문장 → CA/TA/승인 도구 구조 → 위 화면과 캡션 → 실제 결과표 → 한계**면 된다. 화면에는 명령과 결과를 남기고 긴 설명은 캡션에 쓴다. 프로그램의 FAIL이 예상된 거부라면 그 차이를 설명한다.
+
+최신 소스 커밋을 참고용으로 기록하려면 노트북 저장소에서 `git rev-parse HEAD`, `git status --short`를 실행한다. 보드 시험일·설치 패키지 버전도 기록한다. 이미 설치된 패키지와 이 커밋의 정확한 대응을 확인하지 않았다면 동일하다고 쓰지 않는다. 해시 대조와 상세 시험 기록은 기존 문서에서 후속 보완할 수 있다.
+
+최종 확인:
+
+- [ ] 1~5절 실제 결과와 종료 코드를 저장했다.
+- [ ] 실패한 항목을 성공이라고 쓰지 않았고, 필요한 원인 확인/수정을 마쳤다.
+- [ ] 캡처와 텍스트 로그를 연결해 사례 문서를 작성했다.
+- [ ] 아래 후속 시험/미확인 사항을 표시했다.
+
+**이번에 건너뛴 후속 시험:** 동일 세션 승인 재제출, 미준비 명령/직접 서명 우회, 원문 결합 변조, 바이너리 ECHO·작은 버퍼 재시도, HASH 오류 순서, 이전 공개키를 입력한 독립 검증, 키 덮어쓰기 거부 및 상세 보안 설정 조사.
+
+이 문서의 체크 완료는 **현재 CLI로 수행한 P0 실증 정리 완료**다. 기존 상세 문서의 모든 필수 시험까지 완료했다는 뜻은 아니다. 미검증 범위를 명시한 포트폴리오를 먼저 완성한 뒤 다음 개발 범위를 결정한다.

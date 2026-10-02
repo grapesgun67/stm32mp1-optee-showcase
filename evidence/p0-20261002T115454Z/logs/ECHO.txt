@@ -1,0 +1,6 @@
+$ portfolio-hello --echo hello
+echo: result=0x00000000 origin=0x00000004
+TA : [hello]
+PASS: 5 ECHO bytes matched
+
+process exit=0

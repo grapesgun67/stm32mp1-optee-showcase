@@ -1,0 +1,243 @@
+{
+  "baseline": {
+    "run_id": "p0-20261002T115454Z",
+    "started_utc": "2026-10-02T11:54:54.215650+00:00",
+    "source_commit": "44b7917a028a1eb6863b4bdc7b68ec05a9abff0f",
+    "package": "portfolio-hello_1.0-r0.10_armhf.deb",
+    "package_sha256": "3a40219abc43714e549975a67e2c54029eca297309493dc1660e832d1d7feeea",
+    "manifest_sha256": "a26407058004af94ae4c9a4ce68818023d3c8902f49be2aabf0feddaad4ba034",
+    "package_files": {
+      "usr/bin/portfolio-hello": "be5098269436f7ec177f0b23755ca04742fda4aaa679a5c8c069aa723ab410c6",
+      "usr/lib/optee_armtz/12694b3a-c0af-4915-bf39-a819770b8355.ta": "52a0436a3bfa3b0d61105918e162a20569ffd10df3357539e527739c19137982"
+    }
+  },
+  "tests": [
+    {
+      "id": "ENV",
+      "exit": 0,
+      "verdict": "PASS",
+      "utc": "2026-10-02T11:55:55.084249+00:00",
+      "title": "실물 환경·설치 파일 확인",
+      "group": "환경",
+      "command": "uname -a; cat /etc/os-release; printf \"\\nMODEL=\"; tr -d \"\\000\" < /proc/device-tree/model; printf \"\\n\"; dpkg-query -W portfolio-hello; systemctl is-active tee-supplicant.service; cat /proc/sys/kernel/random/boot_id; sha256sum /usr/bin/portfolio-hello /usr/lib/optee_armtz/12694b3a-c0af-4915-bf39-a819770b8355.ta",
+      "output": "$ uname -a; cat /etc/os-release; printf \"\\nMODEL=\"; tr -d \"\\000\" < /proc/device-tree/model; printf \"\\n\"; dpkg-query -W portfolio-hello; systemctl is-active tee-supplicant.service; cat /proc/sys/kernel/random/boot_id; sha256sum /usr/bin/portfolio-hello /usr/lib/optee_armtz/12694b3a-c0af-4915-bf39-a819770b8355.ta\nLinux stm32mp1-board 6.6.129 #1 SMP PREEMPT Thu Mar  5 15:03:43 UTC 2026 armv7l GNU/Linux\nID=openstlinux-weston\nNAME=\"ST OpenSTLinux - Weston - (A Yocto Project Based Distro)\"\nVERSION=\"5.0.17-snapshot-20260916 (scarthgap)\"\nVERSION_ID=5.0.17-snapshot-20260916\nVERSION_CODENAME=\"scarthgap\"\nPRETTY_NAME=\"ST OpenSTLinux - Weston - (A Yocto Project Based Distro) 5.0.17-snapshot-20260916 (scarthgap)\"\nCPE_NAME=\"cpe:/o:openembedded:openstlinux-weston:5.0.17-snapshot-20260916\"\n\nMODEL=STMicroelectronics STM32MP157F-DK2 Discovery Board\nportfolio-hello\t1.0-r0.10\nactive\n[boot ID 원본 별도 보관]\nbe5098269436f7ec177f0b23755ca04742fda4aaa679a5c8c069aa723ab410c6  /usr/bin/portfolio-hello\n52a0436a3bfa3b0d61105918e162a20569ffd10df3357539e527739c19137982  /usr/lib/optee_armtz/12694b3a-c0af-4915-bf39-a819770b8355.ta\n\nprocess exit=0\n"
+    },
+    {
+      "id": "PING-4",
+      "exit": 0,
+      "verdict": "PASS",
+      "utc": "2026-10-02T11:55:55.848257+00:00",
+      "title": "같은 세션 PING 4회",
+      "group": "기초",
+      "command": "portfolio-hello --ping 4",
+      "output": "$ portfolio-hello --ping 4\nping: result=0x00000000 origin=0x00000004\nCA : ping(1)\nTA : ping_cnt(1)\nping: result=0x00000000 origin=0x00000004\nCA : ping(2)\nTA : ping_cnt(2)\nping: result=0x00000000 origin=0x00000004\nCA : ping(3)\nTA : ping_cnt(3)\nping: result=0x00000000 origin=0x00000004\nCA : ping(4)\nTA : ping_cnt(4)\nPASS: 4 PING calls counted\n\nprocess exit=0\n"
+    },
+    {
+      "id": "PING-NEW",
+      "exit": 0,
+      "verdict": "PASS",
+      "utc": "2026-10-02T11:55:56.649530+00:00",
+      "title": "새 실행 카운터 초기화",
+      "group": "기초",
+      "command": "portfolio-hello --ping 1",
+      "output": "$ portfolio-hello --ping 1\nping: result=0x00000000 origin=0x00000004\nCA : ping(1)\nTA : ping_cnt(1)\nPASS: 1 PING calls counted\n\nprocess exit=0\n"
+    },
+    {
+      "id": "ECHO",
+      "exit": 0,
+      "verdict": "PASS",
+      "utc": "2026-10-02T11:55:57.434774+00:00",
+      "title": "ECHO 일반 입력",
+      "group": "기초",
+      "command": "portfolio-hello --echo hello",
+      "output": "$ portfolio-hello --echo hello\necho: result=0x00000000 origin=0x00000004\nTA : [hello]\nPASS: 5 ECHO bytes matched\n\nprocess exit=0\n"
+    },
+    {
+      "id": "ECHO-EMPTY",
+      "exit": 0,
+      "verdict": "PASS",
+      "utc": "2026-10-02T11:55:58.218978+00:00",
+      "title": "ECHO 빈 입력",
+      "group": "기초",
+      "command": "portfolio-hello --echo ''",
+      "output": "$ portfolio-hello --echo ''\necho: result=0x00000000 origin=0x00000004\nTA : []\nPASS: 0 ECHO bytes matched\n\nprocess exit=0\n"
+    },
+    {
+      "id": "ECHO-16",
+      "exit": 0,
+      "verdict": "PASS",
+      "utc": "2026-10-02T11:55:59.014904+00:00",
+      "title": "ECHO 최대 16바이트",
+      "group": "기초",
+      "command": "portfolio-hello --echo 1234567890123456",
+      "output": "$ portfolio-hello --echo 1234567890123456\necho: result=0x00000000 origin=0x00000004\nTA : [1234567890123456]\nPASS: 16 ECHO bytes matched\n\nprocess exit=0\n"
+    },
+    {
+      "id": "BAD-COMMAND",
+      "exit": 0,
+      "verdict": "PASS",
+      "utc": "2026-10-02T11:55:59.774898+00:00",
+      "title": "알 수 없는 명령 거부",
+      "group": "기초",
+      "command": "portfolio-hello --bad-command",
+      "output": "$ portfolio-hello --bad-command\nbad-command: result=0xffff000a origin=0x00000004\nPASS: bad-command rejected by TA as expected\n\nprocess exit=0\n"
+    },
+    {
+      "id": "BAD-TYPES",
+      "exit": 0,
+      "verdict": "PASS",
+      "utc": "2026-10-02T11:56:00.540916+00:00",
+      "title": "PING 타입 오류 거부",
+      "group": "기초",
+      "command": "portfolio-hello --bad-types",
+      "output": "$ portfolio-hello --bad-types\nbad-types: result=0xffff0006 origin=0x00000004\nPASS: bad-types rejected by TA as expected\n\nprocess exit=0\n"
+    },
+    {
+      "id": "HASH-REF",
+      "exit": 0,
+      "verdict": "PASS",
+      "utc": "2026-10-02T11:56:01.034280+00:00",
+      "title": "sha256sum 기준값",
+      "group": "기초",
+      "command": "printf '%s' test | sha256sum",
+      "output": "$ printf '%s' test | sha256sum\n9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08  -\n\nprocess exit=0\n"
+    },
+    {
+      "id": "HASH-1",
+      "exit": 0,
+      "verdict": "PASS",
+      "utc": "2026-10-02T11:56:01.938660+00:00",
+      "title": "SHA-256 / 1바이트 분할",
+      "group": "기초",
+      "command": "portfolio-hello --hash test 1",
+      "output": "$ portfolio-hello --hash test 1\nhash: result=0x00000000 origin=0x00000004\nSHA256: 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\n\nprocess exit=0\n"
+    },
+    {
+      "id": "HASH-2",
+      "exit": 0,
+      "verdict": "PASS",
+      "utc": "2026-10-02T11:56:02.806820+00:00",
+      "title": "SHA-256 / 2바이트 분할",
+      "group": "기초",
+      "command": "portfolio-hello --hash test 2",
+      "output": "$ portfolio-hello --hash test 2\nhash: result=0x00000000 origin=0x00000004\nSHA256: 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\n\nprocess exit=0\n"
+    },
+    {
+      "id": "HASH-4",
+      "exit": 0,
+      "verdict": "PASS",
+      "utc": "2026-10-02T11:56:03.640609+00:00",
+      "title": "SHA-256 / 4바이트 분할",
+      "group": "기초",
+      "command": "portfolio-hello --hash test 4",
+      "output": "$ portfolio-hello --hash test 4\nhash: result=0x00000000 origin=0x00000004\nSHA256: 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\n\nprocess exit=0\n"
+    },
+    {
+      "id": "KEY-BEFORE",
+      "exit": 0,
+      "verdict": "PASS",
+      "utc": "2026-10-02T11:56:04.660753+00:00",
+      "title": "재부팅 전 공개키 조회",
+      "group": "키 유지",
+      "command": "portfolio-hello --sign-public-key",
+      "output": "$ portfolio-hello --sign-public-key\nGET_PUBLIC_KEY: result=0x00000000 origin=0x00000004\nRSA modulus (hex): [공개키 값 생략; 비교 지문은 결과표 참조]\nRSA exponent (hex): [공개키 값 생략; 비교 지문은 결과표 참조]\n\nprocess exit=0\n\npublic key SHA256(n || e): ffdaa92c3599bf82e9dd84d310dc7e43e4d4a5ec6750a0d823150f2db5c9c0a5\n",
+      "key_fingerprint": "ffdaa92c3599bf82e9dd84d310dc7e43e4d4a5ec6750a0d823150f2db5c9c0a5"
+    },
+    {
+      "id": "STORAGE",
+      "exit": 0,
+      "verdict": "PASS",
+      "utc": "2026-10-02T11:56:05.133711+00:00",
+      "title": "영속 저장소 마운트",
+      "group": "키 유지",
+      "command": "readlink -f /var/lib/tee; findmnt -T /var/lib/tee -o TARGET,SOURCE,FSTYPE,OPTIONS",
+      "output": "$ readlink -f /var/lib/tee; findmnt -T /var/lib/tee -o TARGET,SOURCE,FSTYPE,OPTIONS\n/var/lib/tee\nTARGET SOURCE                                                     FSTYPE OPTIONS\n/      /dev/disk/by-partuuid/<root-partuuid> ext4   rw,relatime\n\nprocess exit=0\n"
+    },
+    {
+      "id": "AUTH-NORMAL",
+      "exit": 0,
+      "verdict": "PASS",
+      "utc": "2026-10-02T12:02:00.139362+00:00",
+      "title": "정상 승인 → 데이터 서명",
+      "group": "승인",
+      "command": "portfolio-hello --sign test /tmp/p0-20261002T115454Z/NORMAL.bin /tmp/p0-20261002T115454Z/NORMAL.sig",
+      "output": "$ portfolio-hello --sign test /tmp/p0-20261002T115454Z/NORMAL.bin /tmp/p0-20261002T115454Z/NORMAL.sig\n$ portfolio-hello --sign test /tmp/p0-20261002T115454Z/NORMAL.bin /tmp/p0-20261002T115454Z/NORMAL.sig\nGET_PUBLIC_KEY: result=0x00000000 origin=0x00000004\nPREPARE_SIGN: result=0x00000000 origin=0x00000004\nPASS: challenge prepared (not authenticated)\nRequest saved: /tmp/p0-20261002T115454Z/NORMAL.bin (132 bytes)\nTarget key ID: ffdaa92c3599bf82e9dd84d310dc7e43e4d4a5ec6750a0d823150f2db5c9c0a5\nCopy request to the laptop using another terminal.\nCopy the resulting approval signature to: /tmp/p0-20261002T115454Z/NORMAL.sig\nKeep this session open; press Enter after the copy completes.\nEOF cancels. Enter submits approval to the TA in this same session.\nLoaded approval signature: 256 bytes (not verified).\nSIGN_AUTHORIZED: result=0x00000000 origin=0x00000004\nPASS: original data signature verified\nPASS: altered data signature rejected\n\nexit=0\n\nprocess exit=0\n",
+      "request_sha256": "bd94958340b7ce9d2fe354d56cf1913bb50d630be07475f80a5e67fd77165bf0",
+      "submitted_signature_sha256": "a6c3a1636cd8b48a5e483f0200892bacdb6086634c3466fb4c859af67a2123a7"
+    },
+    {
+      "id": "AUTH-TAMPER",
+      "exit": 1,
+      "verdict": "PASS",
+      "utc": "2026-10-02T12:02:12.656980+00:00",
+      "title": "승인 서명 1바이트 변조 거부",
+      "group": "승인",
+      "command": "portfolio-hello --sign test /tmp/p0-20261002T115454Z/TAMPER.bin /tmp/p0-20261002T115454Z/TAMPER.sig",
+      "output": "$ portfolio-hello --sign test /tmp/p0-20261002T115454Z/TAMPER.bin /tmp/p0-20261002T115454Z/TAMPER.sig\n$ portfolio-hello --sign test /tmp/p0-20261002T115454Z/TAMPER.bin /tmp/p0-20261002T115454Z/TAMPER.sig\nGET_PUBLIC_KEY: result=0x00000000 origin=0x00000004\nPREPARE_SIGN: result=0x00000000 origin=0x00000004\nPASS: challenge prepared (not authenticated)\nRequest saved: /tmp/p0-20261002T115454Z/TAMPER.bin (132 bytes)\nTarget key ID: ffdaa92c3599bf82e9dd84d310dc7e43e4d4a5ec6750a0d823150f2db5c9c0a5\nCopy request to the laptop using another terminal.\nCopy the resulting approval signature to: /tmp/p0-20261002T115454Z/TAMPER.sig\nKeep this session open; press Enter after the copy completes.\nEOF cancels. Enter submits approval to the TA in this same session.\nFAIL: authorized signing flow\nLoaded approval signature: 256 bytes (not verified).\nSIGN_AUTHORIZED: result=0xffff3072 origin=0x00000004\n\nexit=1\n\nprocess exit=1\n",
+      "request_sha256": "052df190337ea7f997d0f2cb9f22f71dff40968b6a79fab7ca1855b13beda942",
+      "submitted_signature_sha256": "9b7e05024faff0278007b54db6fa7bfb9fb258e2027659cfb286435cf591da2a"
+    },
+    {
+      "id": "AUTH-WRONG-KEY",
+      "exit": 1,
+      "verdict": "PASS",
+      "utc": "2026-10-02T12:02:15.538840+00:00",
+      "title": "다른 승인키 거부",
+      "group": "승인",
+      "command": "portfolio-hello --sign test /tmp/p0-20261002T115454Z/WRONG-KEY.bin /tmp/p0-20261002T115454Z/WRONG-KEY.sig",
+      "output": "$ portfolio-hello --sign test /tmp/p0-20261002T115454Z/WRONG-KEY.bin /tmp/p0-20261002T115454Z/WRONG-KEY.sig\n$ portfolio-hello --sign test /tmp/p0-20261002T115454Z/WRONG-KEY.bin /tmp/p0-20261002T115454Z/WRONG-KEY.sig\nGET_PUBLIC_KEY: result=0x00000000 origin=0x00000004\nPREPARE_SIGN: result=0x00000000 origin=0x00000004\nPASS: challenge prepared (not authenticated)\nRequest saved: /tmp/p0-20261002T115454Z/WRONG-KEY.bin (132 bytes)\nTarget key ID: ffdaa92c3599bf82e9dd84d310dc7e43e4d4a5ec6750a0d823150f2db5c9c0a5\nCopy request to the laptop using another terminal.\nCopy the resulting approval signature to: /tmp/p0-20261002T115454Z/WRONG-KEY.sig\nKeep this session open; press Enter after the copy completes.\nEOF cancels. Enter submits approval to the TA in this same session.\nFAIL: authorized signing flow\nLoaded approval signature: 256 bytes (not verified).\nSIGN_AUTHORIZED: result=0xffff3072 origin=0x00000004\n\nexit=1\n\nprocess exit=1\n",
+      "request_sha256": "08366359bfb765a8feae6b0ef281ce0586fabe1020754df6d89dae2acc654f4a",
+      "submitted_signature_sha256": "f9ee601240810373e6003e5ce66ba072efb8e7386347168df4884133a948e997"
+    },
+    {
+      "id": "AUTH-REPLAY",
+      "exit": 1,
+      "verdict": "PASS",
+      "utc": "2026-10-02T12:02:18.126087+00:00",
+      "title": "새 요청에 과거 승인 재사용 거부",
+      "group": "승인",
+      "command": "portfolio-hello --sign test /tmp/p0-20261002T115454Z/REPLAY.bin /tmp/p0-20261002T115454Z/REPLAY.sig",
+      "output": "$ portfolio-hello --sign test /tmp/p0-20261002T115454Z/REPLAY.bin /tmp/p0-20261002T115454Z/REPLAY.sig\n$ portfolio-hello --sign test /tmp/p0-20261002T115454Z/REPLAY.bin /tmp/p0-20261002T115454Z/REPLAY.sig\nGET_PUBLIC_KEY: result=0x00000000 origin=0x00000004\nPREPARE_SIGN: result=0x00000000 origin=0x00000004\nPASS: challenge prepared (not authenticated)\nRequest saved: /tmp/p0-20261002T115454Z/REPLAY.bin (132 bytes)\nTarget key ID: ffdaa92c3599bf82e9dd84d310dc7e43e4d4a5ec6750a0d823150f2db5c9c0a5\nCopy request to the laptop using another terminal.\nCopy the resulting approval signature to: /tmp/p0-20261002T115454Z/REPLAY.sig\nKeep this session open; press Enter after the copy completes.\nEOF cancels. Enter submits approval to the TA in this same session.\nFAIL: authorized signing flow\nLoaded approval signature: 256 bytes (not verified).\nSIGN_AUTHORIZED: result=0xffff3072 origin=0x00000004\n\nexit=1\n\nprocess exit=1\n",
+      "request_sha256": "58473b523d9ff61e9aae9a4404d02e2e42e75fc11dbf255a0731759e778f213c",
+      "submitted_signature_sha256": "a6c3a1636cd8b48a5e483f0200892bacdb6086634c3466fb4c859af67a2123a7"
+    },
+    {
+      "id": "REBOOT",
+      "exit": 0,
+      "verdict": "PASS",
+      "utc": "2026-10-02T12:04:58.411629+00:00",
+      "title": "재부팅 및 새 boot ID 확인",
+      "group": "키 유지",
+      "command": "sync && reboot; [reconnect] cat /proc/sys/kernel/random/boot_id",
+      "output": "$ sync && reboot; [reconnect] cat /proc/sys/kernel/random/boot_id\n[HOST OBSERVATION / 재접속 후 판정]\nObserved a new Linux boot ID after sync/reboot and SSH reconnection.\nElapsed seconds: 51.5\n\nprocess exit=0\n"
+    },
+    {
+      "id": "KEY-AFTER",
+      "exit": 0,
+      "verdict": "PASS",
+      "utc": "2026-10-02T12:04:59.884208+00:00",
+      "title": "재부팅 후 동일 공개키 확인",
+      "group": "키 유지",
+      "command": "portfolio-hello --sign-public-key; [host] compare public n/e with pre-reboot capture",
+      "output": "$ portfolio-hello --sign-public-key; [host] compare public n/e with pre-reboot capture\nGET_PUBLIC_KEY: result=0x00000000 origin=0x00000004\nRSA modulus (hex): [공개키 값 생략; 비교 지문은 결과표 참조]\nRSA exponent (hex): [공개키 값 생략; 비교 지문은 결과표 참조]\n\nCompared public n/e against pre-reboot capture: MATCH\n\nprocess exit=0\n\npublic key SHA256(n || e): ffdaa92c3599bf82e9dd84d310dc7e43e4d4a5ec6750a0d823150f2db5c9c0a5\n",
+      "key_fingerprint": "ffdaa92c3599bf82e9dd84d310dc7e43e4d4a5ec6750a0d823150f2db5c9c0a5"
+    },
+    {
+      "id": "ENV-AFTER",
+      "exit": 0,
+      "verdict": "PASS",
+      "utc": "2026-10-02T12:05:00.785631+00:00",
+      "title": "재부팅 후 패키지·서비스 확인",
+      "group": "키 유지",
+      "command": "dpkg-query -W portfolio-hello; systemctl is-active tee-supplicant.service; sha256sum /usr/bin/portfolio-hello /usr/lib/optee_armtz/12694b3a-c0af-4915-bf39-a819770b8355.ta",
+      "output": "$ dpkg-query -W portfolio-hello; systemctl is-active tee-supplicant.service; sha256sum /usr/bin/portfolio-hello /usr/lib/optee_armtz/12694b3a-c0af-4915-bf39-a819770b8355.ta\nportfolio-hello\t1.0-r0.10\nactive\nbe5098269436f7ec177f0b23755ca04742fda4aaa679a5c8c069aa723ab410c6  /usr/bin/portfolio-hello\n52a0436a3bfa3b0d61105918e162a20569ffd10df3357539e527739c19137982  /usr/lib/optee_armtz/12694b3a-c0af-4915-bf39-a819770b8355.ta\n\nprocess exit=0\n"
+    }
+  ],
+  "limits": [
+    "재부팅 키 유지와 REE FS 롤백 방지는 별개입니다. 단조 카운터 경고의 해결, HUK와 보안 부팅은 미검증입니다.",
+    "같은 세션 승인 재제출, 미준비·직접 명령 우회, 원문 결합 변조 및 상세 버퍼/상태 오류 시험은 이번 간단 실증 범위에서 제외했습니다.",
+    "CA는 실행 시 TA에서 조회한 공개키로 검증합니다. 재부팅 전 공개키 파일을 입력한 독립 서명 검증은 미실행입니다.",
+    "보드와 로컬 deb의 CA/TA 파일 해시는 대조했습니다. 기록한 저장소 HEAD가 과거 deb의 정확한 빌드 입력이었다는 증명은 확보하지 않았습니다.",
+    "SSH로 수집한 실제 출력의 공개용 발췌입니다. UART 전체 부팅 로그, 실제 데스크톱 스크린샷과 보드 사진은 포함하지 않았습니다."
+  ]
+}

@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OP-TEE 실증 포트폴리오 | grapesgun67</title>
+<style>
+:root{--ink:#102e32;--muted:#536a6d;--paper:#f6f4ef;--line:#d9ded8;--green:#176650;--orange:#a34d19}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;line-height:1.75}a{color:var(--green);text-underline-offset:4px}header,main,footer{max-width:1160px;margin:auto;padding:0 32px}header{display:flex;justify-content:space-between;align-items:center;gap:20px;padding-top:24px;padding-bottom:24px;border-bottom:1px solid var(--line)}.brand{font-size:12px;font-weight:800;letter-spacing:.14em}nav{display:flex;gap:20px;font-size:13px}.hero{padding:72px 0 52px;max-width:920px}.eyebrow{font-size:12px;letter-spacing:.16em;font-weight:800;color:var(--green)}h1{font-size:clamp(34px,5.2vw,62px);line-height:1.2;letter-spacing:-.055em;margin:20px 0 26px}h1 span{color:var(--green)}.lead{max-width:760px;font-size:18px;color:var(--muted)}.chips{display:flex;gap:8px;flex-wrap:wrap;margin:26px 0}.chip{border:1px solid var(--line);border-radius:24px;padding:5px 13px;font-size:12px}.stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.stat{padding:24px;border-right:1px solid var(--line)}.stat:last-child{border:0}.stat strong{font-size:38px;display:block;line-height:1.2}.stat span{font-size:13px;color:var(--muted)}section{padding:48px 0;border-bottom:1px solid var(--line)}h2{font-size:28px;letter-spacing:-.04em;margin:8px 0 18px}h3{font-size:17px;margin:10px 0}.section-note{color:var(--muted);max-width:800px}.flow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:26px}.node{border:1px solid var(--line);border-radius:12px;padding:24px;background:#fff}.node.secure{background:var(--ink);color:#fff;border:0}.node small{letter-spacing:.1em;font-size:11px}.node p{font-size:14px;margin-bottom:0}.node ul{padding-left:20px;font-size:14px}.flow-caption{font-size:13px;color:var(--muted)}.filters{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0}button{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:24px;background:transparent;color:var(--ink);padding:8px 16px;cursor:pointer}button[aria-pressed=true]{background:var(--ink);color:white}button:focus-visible,summary:focus-visible{outline:3px solid #da982f;outline-offset:3px}.tests{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.test{background:white;border:1px solid var(--line);border-radius:12px;padding:22px;min-width:0}.test[hidden]{display:none}.test-top{display:flex;justify-content:space-between;gap:8px}.test-id{font-family:monospace;font-size:12px;letter-spacing:.03em;color:var(--muted)}.badge{font-size:11px;font-weight:800;padding:2px 9px;border-radius:5px}.pass{background:#e1f0e9;color:var(--green)}.fail{background:#fce4df;color:#a32b24}.pending,.inconclusive{background:#fff0d7;color:var(--orange)}.meta,.pending-note{font-size:12px;color:var(--muted)}summary{cursor:pointer;font-size:13px;color:var(--green)}pre{font-size:12px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;background:#102e32;color:#e3efea;padding:16px;border-radius:6px;max-height:420px;overflow:auto}details a{font-size:12px}code{font-family:monospace;overflow-wrap:anywhere}.limits{padding-left:22px;max-width:900px}.limits li{margin:12px 0;color:var(--muted);font-size:14px}.facts{font-size:13px;display:grid;grid-template-columns:150px 1fr;gap:12px}.facts dt{color:var(--muted)}.facts dd{margin:0;overflow-wrap:anywhere}.notice{border-left:3px solid var(--orange);padding:10px 18px;background:#f1ece1;font-size:13px;margin:24px 0}footer{padding-top:24px;padding-bottom:40px;font-size:12px;color:var(--muted)}@media(max-width:700px){header,main,footer{padding-left:20px;padding-right:20px}nav{gap:10px}.hero{padding-top:40px}.flow,.tests{grid-template-columns:1fr}.facts{grid-template-columns:1fr}.stat{padding:16px 10px}.stat strong{font-size:30px}}@media print{nav,.filters,button{display:none}.hero{padding-top:20px}.test{break-inside:avoid}pre{max-height:none}.tests{grid-template-columns:1fr}body{background:white}section{padding:24px 0}}
+</style>
+</head>
+<body>
+<header><div class="brand">DEVICE TRUST LAB / P0</div><nav aria-label="페이지 탐색"><a href="#architecture">구조</a><a href="#evidence">실증</a><a href="#limits">한계</a></nav></header>
+<main>
+<div class="hero"><div class="eyebrow">STM32MP157F-DK2 · REAL HARDWARE</div><h1>키를 보관하는 데서,<br><span>사용 권한을 검증하는 데까지.</span></h1><p class="lead">OP-TEE 내부 키로 외부 승인된 요청을 서명하는 서비스. CA/TA 통신부터 영속 키와 챌린지 기반 승인까지 구현하고, 실제 보드의 성공과 거부 결과를 기록했습니다.</p><p><a href="downloads/p0-optee-portfolio.pdf">제출용 PDF 내려받기 · 5쪽 ↗</a></p><div class="chips"><span class="chip">Yocto / OpenSTLinux</span><span class="chip">OP-TEE · CA / TA</span><span class="chip">RSA-2048 · SHA-256</span><span class="chip">SSH 실행 로그</span></div></div>
+<div class="stats" aria-label="실행 단위별 시험 현황"><div class="stat"><strong>21</strong><span>기대 조건 확인 · PASS</span></div><div class="stat"><strong>0</strong><span>기대 조건 불일치 · FAIL</span></div><div class="stat"><strong>0</strong><span>이번 회차 결과 대기</span></div></div>
+<p class="flow-caption">실행 단위별 집계입니다. 상세 P0 전체 완료율이나 제품 보안 인증을 뜻하지 않습니다.</p>
+<section id="architecture"><div class="eyebrow">01 / DESIGN</div><h2>승인키와 데이터 서명키, 두 역할을 분리했습니다.</h2><p class="section-note">직접 구현한 범위는 명령 계약·세션 상태·요청 직렬화·승인 정책·검증 도구·Yocto 패키징입니다. OP-TEE, OpenSSL과 ST BSP는 기반 기술로 사용했습니다.</p><div class="flow"><div class="node"><small>LAPTOP / APPROVER</small><h3>요청 확인 · 승인 서명</h3><ul><li>원문과 대상 키 지문 확인</li><li>사용자가 APPROVE</li><li>노트북 승인키로 요청 서명</li></ul></div><div class="node"><small>LINUX / CLIENT APPLICATION</small><h3>요청 전달 · 결과 검증</h3><ul><li>132바이트 요청 내보내기</li><li>같은 세션으로 승인 제출</li><li>TA 데이터 서명 공개키 검증</li></ul></div><div class="node secure"><small>OP-TEE / TRUSTED APPLICATION</small><h3>승인 검사 · 키 사용</h3><ul><li>해시와 챌린지를 세션에 결합</li><li>자체 상태로 요청 재구성</li><li>검증 후 데이터 서명, 요청 소비</li></ul></div></div><p class="flow-caption">요청: TA → CA → 노트북 / 승인: 노트북 → CA → TA. 개인키를 반환하는 명령은 제공하지 않습니다.</p></section>
+<section id="evidence"><div class="eyebrow">02 / EVIDENCE</div><h2>성공뿐 아니라, 거부해야 할 요청도 확인합니다.</h2><p class="section-note">각 카드를 펼치면 실제 명령과 출력을 볼 수 있습니다. 승인 변조 시험의 nonzero 종료는 예상한 거부이며, 시험 판정은 PASS가 될 수 있습니다.</p><div class="notice">이 패널은 실제 SSH 실행 로그의 공개용 발췌입니다. 터미널 스크린샷을 합성한 이미지가 아닙니다. 미수집 결과는 대기로 표시합니다.</div><div class="filters" aria-label="시험 분류"><button type="button" data-filter="전체" aria-pressed="true">전체</button><button type="button" data-filter="환경" aria-pressed="false">환경</button><button type="button" data-filter="기초" aria-pressed="false">기초 기능</button><button type="button" data-filter="승인" aria-pressed="false">승인 / 거부</button><button type="button" data-filter="키 유지" aria-pressed="false">영속 키</button></div><div class="tests"><article class="test" data-group="환경" data-state="PASS"><div class="test-top"><span class="test-id">ENV</span><span class="badge pass">PASS</span></div><h3>실물 환경·설치 파일 확인</h3><p class="meta">환경 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ uname -a; cat /etc/os-release; printf &quot;\nMODEL=&quot;; tr -d &quot;\000&quot; &lt; /proc/device-tree/model; printf &quot;\n&quot;; dpkg-query -W portfolio-hello; systemctl is-active tee-supplicant.service; cat /proc/sys/kernel/random/boot_id; sha256sum /usr/bin/portfolio-hello /usr/lib/optee_armtz/12694b3a-c0af-4915-bf39-a819770b8355.ta
+Linux stm32mp1-board 6.6.129 #1 SMP PREEMPT Thu Mar  5 15:03:43 UTC 2026 armv7l GNU/Linux
+ID=openstlinux-weston
+NAME=&quot;ST OpenSTLinux - Weston - (A Yocto Project Based Distro)&quot;
+VERSION=&quot;5.0.17-snapshot-20260916 (scarthgap)&quot;
+VERSION_ID=5.0.17-snapshot-20260916
+VERSION_CODENAME=&quot;scarthgap&quot;
+PRETTY_NAME=&quot;ST OpenSTLinux - Weston - (A Yocto Project Based Distro) 5.0.17-snapshot-20260916 (scarthgap)&quot;
+CPE_NAME=&quot;cpe:/o:openembedded:openstlinux-weston:5.0.17-snapshot-20260916&quot;
+
+MODEL=STMicroelectronics STM32MP157F-DK2 Discovery Board
+portfolio-hello	1.0-r0.10
+active
+[boot ID 원본 별도 보관]
+be5098269436f7ec177f0b23755ca04742fda4aaa679a5c8c069aa723ab410c6  /usr/bin/portfolio-hello
+52a0436a3bfa3b0d61105918e162a20569ffd10df3357539e527739c19137982  /usr/lib/optee_armtz/12694b3a-c0af-4915-bf39-a819770b8355.ta
+
+process exit=0
+</pre><a href="evidence/p0-20261002T115454Z/logs/ENV.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="기초" data-state="PASS"><div class="test-top"><span class="test-id">PING-4</span><span class="badge pass">PASS</span></div><h3>같은 세션 PING 4회</h3><p class="meta">기초 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ portfolio-hello --ping 4
+ping: result=0x00000000 origin=0x00000004
+CA : ping(1)
+TA : ping_cnt(1)
+ping: result=0x00000000 origin=0x00000004
+CA : ping(2)
+TA : ping_cnt(2)
+ping: result=0x00000000 origin=0x00000004
+CA : ping(3)
+TA : ping_cnt(3)
+ping: result=0x00000000 origin=0x00000004
+CA : ping(4)
+TA : ping_cnt(4)
+PASS: 4 PING calls counted
+
+process exit=0
+</pre><a href="evidence/p0-20261002T115454Z/logs/PING-4.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="기초" data-state="PASS"><div class="test-top"><span class="test-id">PING-NEW</span><span class="badge pass">PASS</span></div><h3>새 실행 카운터 초기화</h3><p class="meta">기초 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ portfolio-hello --ping 1
+ping: result=0x00000000 origin=0x00000004
+CA : ping(1)
+TA : ping_cnt(1)
+PASS: 1 PING calls counted
+
+process exit=0
+</pre><a href="evidence/p0-20261002T115454Z/logs/PING-NEW.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="기초" data-state="PASS"><div class="test-top"><span class="test-id">ECHO</span><span class="badge pass">PASS</span></div><h3>ECHO 일반 입력</h3><p class="meta">기초 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ portfolio-hello --echo hello
+echo: result=0x00000000 origin=0x00000004
+TA : [hello]
+PASS: 5 ECHO bytes matched
+
+process exit=0
+</pre><a href="evidence/p0-20261002T115454Z/logs/ECHO.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="기초" data-state="PASS"><div class="test-top"><span class="test-id">ECHO-EMPTY</span><span class="badge pass">PASS</span></div><h3>ECHO 빈 입력</h3><p class="meta">기초 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ portfolio-hello --echo &#x27;&#x27;
+echo: result=0x00000000 origin=0x00000004
+TA : []
+PASS: 0 ECHO bytes matched
+
+process exit=0
+</pre><a href="evidence/p0-20261002T115454Z/logs/ECHO-EMPTY.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="기초" data-state="PASS"><div class="test-top"><span class="test-id">ECHO-16</span><span class="badge pass">PASS</span></div><h3>ECHO 최대 16바이트</h3><p class="meta">기초 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ portfolio-hello --echo 1234567890123456
+echo: result=0x00000000 origin=0x00000004
+TA : [1234567890123456]
+PASS: 16 ECHO bytes matched
+
+process exit=0
+</pre><a href="evidence/p0-20261002T115454Z/logs/ECHO-16.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="기초" data-state="PASS"><div class="test-top"><span class="test-id">BAD-COMMAND</span><span class="badge pass">PASS</span></div><h3>알 수 없는 명령 거부</h3><p class="meta">기초 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ portfolio-hello --bad-command
+bad-command: result=0xffff000a origin=0x00000004
+PASS: bad-command rejected by TA as expected
+
+process exit=0
+</pre><a href="evidence/p0-20261002T115454Z/logs/BAD-COMMAND.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="기초" data-state="PASS"><div class="test-top"><span class="test-id">BAD-TYPES</span><span class="badge pass">PASS</span></div><h3>PING 타입 오류 거부</h3><p class="meta">기초 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ portfolio-hello --bad-types
+bad-types: result=0xffff0006 origin=0x00000004
+PASS: bad-types rejected by TA as expected
+
+process exit=0
+</pre><a href="evidence/p0-20261002T115454Z/logs/BAD-TYPES.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="기초" data-state="PASS"><div class="test-top"><span class="test-id">HASH-REF</span><span class="badge pass">PASS</span></div><h3>sha256sum 기준값</h3><p class="meta">기초 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ printf &#x27;%s&#x27; test | sha256sum
+9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08  -
+
+process exit=0
+</pre><a href="evidence/p0-20261002T115454Z/logs/HASH-REF.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="기초" data-state="PASS"><div class="test-top"><span class="test-id">HASH-1</span><span class="badge pass">PASS</span></div><h3>SHA-256 / 1바이트 분할</h3><p class="meta">기초 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ portfolio-hello --hash test 1
+hash: result=0x00000000 origin=0x00000004
+SHA256: 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+
+process exit=0
+</pre><a href="evidence/p0-20261002T115454Z/logs/HASH-1.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="기초" data-state="PASS"><div class="test-top"><span class="test-id">HASH-2</span><span class="badge pass">PASS</span></div><h3>SHA-256 / 2바이트 분할</h3><p class="meta">기초 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ portfolio-hello --hash test 2
+hash: result=0x00000000 origin=0x00000004
+SHA256: 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+
+process exit=0
+</pre><a href="evidence/p0-20261002T115454Z/logs/HASH-2.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="기초" data-state="PASS"><div class="test-top"><span class="test-id">HASH-4</span><span class="badge pass">PASS</span></div><h3>SHA-256 / 4바이트 분할</h3><p class="meta">기초 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ portfolio-hello --hash test 4
+hash: result=0x00000000 origin=0x00000004
+SHA256: 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+
+process exit=0
+</pre><a href="evidence/p0-20261002T115454Z/logs/HASH-4.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="키 유지" data-state="PASS"><div class="test-top"><span class="test-id">KEY-BEFORE</span><span class="badge pass">PASS</span></div><h3>재부팅 전 공개키 조회</h3><p class="meta">키 유지 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ portfolio-hello --sign-public-key
+GET_PUBLIC_KEY: result=0x00000000 origin=0x00000004
+RSA modulus (hex): [공개키 값 생략; 비교 지문은 결과표 참조]
+RSA exponent (hex): [공개키 값 생략; 비교 지문은 결과표 참조]
+
+process exit=0
+
+public key SHA256(n || e): ffdaa92c3599bf82e9dd84d310dc7e43e4d4a5ec6750a0d823150f2db5c9c0a5
+</pre><a href="evidence/p0-20261002T115454Z/logs/KEY-BEFORE.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="키 유지" data-state="PASS"><div class="test-top"><span class="test-id">STORAGE</span><span class="badge pass">PASS</span></div><h3>영속 저장소 마운트</h3><p class="meta">키 유지 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ readlink -f /var/lib/tee; findmnt -T /var/lib/tee -o TARGET,SOURCE,FSTYPE,OPTIONS
+/var/lib/tee
+TARGET SOURCE                                                     FSTYPE OPTIONS
+/      /dev/disk/by-partuuid/&lt;root-partuuid&gt; ext4   rw,relatime
+
+process exit=0
+</pre><a href="evidence/p0-20261002T115454Z/logs/STORAGE.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="승인" data-state="PASS"><div class="test-top"><span class="test-id">AUTH-NORMAL</span><span class="badge pass">PASS</span></div><h3>정상 승인 → 데이터 서명</h3><p class="meta">승인 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ portfolio-hello --sign test /tmp/p0-20261002T115454Z/NORMAL.bin /tmp/p0-20261002T115454Z/NORMAL.sig
+$ portfolio-hello --sign test /tmp/p0-20261002T115454Z/NORMAL.bin /tmp/p0-20261002T115454Z/NORMAL.sig
+GET_PUBLIC_KEY: result=0x00000000 origin=0x00000004
+PREPARE_SIGN: result=0x00000000 origin=0x00000004
+PASS: challenge prepared (not authenticated)
+Request saved: /tmp/p0-20261002T115454Z/NORMAL.bin (132 bytes)
+Target key ID: ffdaa92c3599bf82e9dd84d310dc7e43e4d4a5ec6750a0d823150f2db5c9c0a5
+Copy request to the laptop using another terminal.
+Copy the resulting approval signature to: /tmp/p0-20261002T115454Z/NORMAL.sig
+Keep this session open; press Enter after the copy completes.
+EOF cancels. Enter submits approval to the TA in this same session.
+Loaded approval signature: 256 bytes (not verified).
+SIGN_AUTHORIZED: result=0x00000000 origin=0x00000004
+PASS: original data signature verified
+PASS: altered data signature rejected
+
+exit=0
+
+process exit=0
+</pre><a href="evidence/p0-20261002T115454Z/logs/AUTH-NORMAL.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="승인" data-state="PASS"><div class="test-top"><span class="test-id">AUTH-TAMPER</span><span class="badge pass">PASS</span></div><h3>승인 서명 1바이트 변조 거부</h3><p class="meta">승인 · process exit 1</p><details><summary>실행 로그 보기</summary><pre>$ portfolio-hello --sign test /tmp/p0-20261002T115454Z/TAMPER.bin /tmp/p0-20261002T115454Z/TAMPER.sig
+$ portfolio-hello --sign test /tmp/p0-20261002T115454Z/TAMPER.bin /tmp/p0-20261002T115454Z/TAMPER.sig
+GET_PUBLIC_KEY: result=0x00000000 origin=0x00000004
+PREPARE_SIGN: result=0x00000000 origin=0x00000004
+PASS: challenge prepared (not authenticated)
+Request saved: /tmp/p0-20261002T115454Z/TAMPER.bin (132 bytes)
+Target key ID: ffdaa92c3599bf82e9dd84d310dc7e43e4d4a5ec6750a0d823150f2db5c9c0a5
+Copy request to the laptop using another terminal.
+Copy the resulting approval signature to: /tmp/p0-20261002T115454Z/TAMPER.sig
+Keep this session open; press Enter after the copy completes.
+EOF cancels. Enter submits approval to the TA in this same session.
+FAIL: authorized signing flow
+Loaded approval signature: 256 bytes (not verified).
+SIGN_AUTHORIZED: result=0xffff3072 origin=0x00000004
+
+exit=1
+
+process exit=1
+</pre><a href="evidence/p0-20261002T115454Z/logs/AUTH-TAMPER.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="승인" data-state="PASS"><div class="test-top"><span class="test-id">AUTH-WRONG-KEY</span><span class="badge pass">PASS</span></div><h3>다른 승인키 거부</h3><p class="meta">승인 · process exit 1</p><details><summary>실행 로그 보기</summary><pre>$ portfolio-hello --sign test /tmp/p0-20261002T115454Z/WRONG-KEY.bin /tmp/p0-20261002T115454Z/WRONG-KEY.sig
+$ portfolio-hello --sign test /tmp/p0-20261002T115454Z/WRONG-KEY.bin /tmp/p0-20261002T115454Z/WRONG-KEY.sig
+GET_PUBLIC_KEY: result=0x00000000 origin=0x00000004
+PREPARE_SIGN: result=0x00000000 origin=0x00000004
+PASS: challenge prepared (not authenticated)
+Request saved: /tmp/p0-20261002T115454Z/WRONG-KEY.bin (132 bytes)
+Target key ID: ffdaa92c3599bf82e9dd84d310dc7e43e4d4a5ec6750a0d823150f2db5c9c0a5
+Copy request to the laptop using another terminal.
+Copy the resulting approval signature to: /tmp/p0-20261002T115454Z/WRONG-KEY.sig
+Keep this session open; press Enter after the copy completes.
+EOF cancels. Enter submits approval to the TA in this same session.
+FAIL: authorized signing flow
+Loaded approval signature: 256 bytes (not verified).
+SIGN_AUTHORIZED: result=0xffff3072 origin=0x00000004
+
+exit=1
+
+process exit=1
+</pre><a href="evidence/p0-20261002T115454Z/logs/AUTH-WRONG-KEY.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="승인" data-state="PASS"><div class="test-top"><span class="test-id">AUTH-REPLAY</span><span class="badge pass">PASS</span></div><h3>새 요청에 과거 승인 재사용 거부</h3><p class="meta">승인 · process exit 1</p><details><summary>실행 로그 보기</summary><pre>$ portfolio-hello --sign test /tmp/p0-20261002T115454Z/REPLAY.bin /tmp/p0-20261002T115454Z/REPLAY.sig
+$ portfolio-hello --sign test /tmp/p0-20261002T115454Z/REPLAY.bin /tmp/p0-20261002T115454Z/REPLAY.sig
+GET_PUBLIC_KEY: result=0x00000000 origin=0x00000004
+PREPARE_SIGN: result=0x00000000 origin=0x00000004
+PASS: challenge prepared (not authenticated)
+Request saved: /tmp/p0-20261002T115454Z/REPLAY.bin (132 bytes)
+Target key ID: ffdaa92c3599bf82e9dd84d310dc7e43e4d4a5ec6750a0d823150f2db5c9c0a5
+Copy request to the laptop using another terminal.
+Copy the resulting approval signature to: /tmp/p0-20261002T115454Z/REPLAY.sig
+Keep this session open; press Enter after the copy completes.
+EOF cancels. Enter submits approval to the TA in this same session.
+FAIL: authorized signing flow
+Loaded approval signature: 256 bytes (not verified).
+SIGN_AUTHORIZED: result=0xffff3072 origin=0x00000004
+
+exit=1
+
+process exit=1
+</pre><a href="evidence/p0-20261002T115454Z/logs/AUTH-REPLAY.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="키 유지" data-state="PASS"><div class="test-top"><span class="test-id">REBOOT</span><span class="badge pass">PASS</span></div><h3>재부팅 및 새 boot ID 확인</h3><p class="meta">키 유지 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ sync &amp;&amp; reboot; [reconnect] cat /proc/sys/kernel/random/boot_id
+[HOST OBSERVATION / 재접속 후 판정]
+Observed a new Linux boot ID after sync/reboot and SSH reconnection.
+Elapsed seconds: 51.5
+
+process exit=0
+</pre><a href="evidence/p0-20261002T115454Z/logs/REBOOT.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="키 유지" data-state="PASS"><div class="test-top"><span class="test-id">KEY-AFTER</span><span class="badge pass">PASS</span></div><h3>재부팅 후 동일 공개키 확인</h3><p class="meta">키 유지 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ portfolio-hello --sign-public-key; [host] compare public n/e with pre-reboot capture
+GET_PUBLIC_KEY: result=0x00000000 origin=0x00000004
+RSA modulus (hex): [공개키 값 생략; 비교 지문은 결과표 참조]
+RSA exponent (hex): [공개키 값 생략; 비교 지문은 결과표 참조]
+
+Compared public n/e against pre-reboot capture: MATCH
+
+process exit=0
+
+public key SHA256(n || e): ffdaa92c3599bf82e9dd84d310dc7e43e4d4a5ec6750a0d823150f2db5c9c0a5
+</pre><a href="evidence/p0-20261002T115454Z/logs/KEY-AFTER.txt">텍스트 로그 열기 ↗</a></details></article>
+<article class="test" data-group="키 유지" data-state="PASS"><div class="test-top"><span class="test-id">ENV-AFTER</span><span class="badge pass">PASS</span></div><h3>재부팅 후 패키지·서비스 확인</h3><p class="meta">키 유지 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ dpkg-query -W portfolio-hello; systemctl is-active tee-supplicant.service; sha256sum /usr/bin/portfolio-hello /usr/lib/optee_armtz/12694b3a-c0af-4915-bf39-a819770b8355.ta
+portfolio-hello	1.0-r0.10
+active
+be5098269436f7ec177f0b23755ca04742fda4aaa679a5c8c069aa723ab410c6  /usr/bin/portfolio-hello
+52a0436a3bfa3b0d61105918e162a20569ffd10df3357539e527739c19137982  /usr/lib/optee_armtz/12694b3a-c0af-4915-bf39-a819770b8355.ta
+
+process exit=0
+</pre><a href="evidence/p0-20261002T115454Z/logs/ENV-AFTER.txt">텍스트 로그 열기 ↗</a></details></article></div></section>
+<section id="limits"><div class="eyebrow">03 / SCOPE</div><h2>입증한 범위만 말합니다.</h2><ul class="limits"><li>재부팅 키 유지와 REE FS 롤백 방지는 별개입니다. 단조 카운터 경고의 해결, HUK와 보안 부팅은 미검증입니다.</li>
+<li>같은 세션 승인 재제출, 미준비·직접 명령 우회, 원문 결합 변조 및 상세 버퍼/상태 오류 시험은 이번 간단 실증 범위에서 제외했습니다.</li>
+<li>CA는 실행 시 TA에서 조회한 공개키로 검증합니다. 재부팅 전 공개키 파일을 입력한 독립 서명 검증은 미실행입니다.</li>
+<li>보드와 로컬 deb의 CA/TA 파일 해시는 대조했습니다. 기록한 저장소 HEAD가 과거 deb의 정확한 빌드 입력이었다는 증명은 확보하지 않았습니다.</li>
+<li>SSH로 수집한 실제 출력의 공개용 발췌입니다. UART 전체 부팅 로그, 실제 데스크톱 스크린샷과 보드 사진은 포함하지 않았습니다.</li></ul><p><a href="case-study.html">사례 문서</a> · <a href="report.html">전체 시험 보고서</a> · <a href="guide.html">직접 실행 가이드</a></p></section>
+<section><div class="eyebrow">04 / TRACEABILITY</div><h2>코드와 실행 결과를 연결하는 기록</h2><dl class="facts"><dt>실증 회차</dt><dd><code>p0-20261002T115454Z</code></dd><dt>설치 패키지</dt><dd><code>portfolio-hello_1.0-r0.10_armhf.deb</code></dd><dt>패키지 SHA-256</dt><dd><code>3a40219abc43714e549975a67e2c54029eca297309493dc1660e832d1d7feeea</code></dd><dt>조사 시 소스 HEAD</dt><dd><code>44b7917a028a1eb6863b4bdc7b68ec05a9abff0f</code><br>과거 패키지의 빌드 커밋으로 확정한 값은 아닙니다.</dd><dt>자료 형식</dt><dd>실제 실행 로그 · 판정 JSON · Markdown 보고서 · 로컬 HTML</dd></dl></section>
+</main><footer>P0 / OP-TEE signing service · 실물 보드 검증 · PASS 21 / FAIL 0 / 미실행 0<br>실제 보드 실행 결과와 확인된 한계를 함께 기록합니다. CA/TA 개발 소스는 비공개로 관리합니다.</footer>
+<script>document.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));document.querySelectorAll('.test').forEach(card=>{card.hidden=button.dataset.filter!=='전체'&&card.dataset.group!==button.dataset.filter;});}));</script>
+</body></html>

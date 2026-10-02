@@ -1,0 +1,5 @@
+$ portfolio-hello --bad-types
+bad-types: result=0xffff0006 origin=0x00000004
+PASS: bad-types rejected by TA as expected
+
+process exit=0

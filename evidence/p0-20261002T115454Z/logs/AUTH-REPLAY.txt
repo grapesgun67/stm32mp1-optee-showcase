@@ -1,0 +1,18 @@
+$ portfolio-hello --sign test /tmp/p0-20261002T115454Z/REPLAY.bin /tmp/p0-20261002T115454Z/REPLAY.sig
+$ portfolio-hello --sign test /tmp/p0-20261002T115454Z/REPLAY.bin /tmp/p0-20261002T115454Z/REPLAY.sig
+GET_PUBLIC_KEY: result=0x00000000 origin=0x00000004
+PREPARE_SIGN: result=0x00000000 origin=0x00000004
+PASS: challenge prepared (not authenticated)
+Request saved: /tmp/p0-20261002T115454Z/REPLAY.bin (132 bytes)
+Target key ID: ffdaa92c3599bf82e9dd84d310dc7e43e4d4a5ec6750a0d823150f2db5c9c0a5
+Copy request to the laptop using another terminal.
+Copy the resulting approval signature to: /tmp/p0-20261002T115454Z/REPLAY.sig
+Keep this session open; press Enter after the copy completes.
+EOF cancels. Enter submits approval to the TA in this same session.
+FAIL: authorized signing flow
+Loaded approval signature: 256 bytes (not verified).
+SIGN_AUTHORIZED: result=0xffff3072 origin=0x00000004
+
+exit=1
+
+process exit=1

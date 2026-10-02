@@ -1,0 +1,5 @@
+$ portfolio-hello --bad-command
+bad-command: result=0xffff000a origin=0x00000004
+PASS: bad-command rejected by TA as expected
+
+process exit=0

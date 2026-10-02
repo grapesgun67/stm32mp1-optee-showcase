@@ -1,0 +1,6 @@
+$ readlink -f /var/lib/tee; findmnt -T /var/lib/tee -o TARGET,SOURCE,FSTYPE,OPTIONS
+/var/lib/tee
+TARGET SOURCE                                                     FSTYPE OPTIONS
+/      /dev/disk/by-partuuid/<root-partuuid> ext4   rw,relatime
+
+process exit=0
