@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create a five-page submission PDF from the published P0 result JSON."""
+"""Create a eight-page submission PDF from the published P0 result JSON."""
 import argparse, json, re
 from pathlib import Path
 from xml.sax.saxutils import escape
@@ -10,6 +10,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Flowable
 from reportlab.lib.pagesizes import A4
+from architecture import figures
 
 ROOT=Path(__file__).resolve().parents[1]
 INK=colors.HexColor('#102E32'); GREEN=colors.HexColor('#176650'); MUTED=colors.HexColor('#536A6D'); LINE=colors.HexColor('#D9DED8'); PALE=colors.HexColor('#EEF4F0')
@@ -71,6 +72,29 @@ def main():
     add('OP-TEE 암호/저장 API, OpenSSL, ST BSP는 기반 기술로 사용했다. 본 자료는 실제 SSH 출력과 호스트 비교 결과를 요약하며, 화면 캡처를 합성한 자료가 아니다. 21 PASS는 상세 로드맵 전체 완료나 보안 인증을 의미하지 않는다.','small')
     story.append(PageBreak())
 
+    class ArchitectureFigure(Flowable):
+        def __init__(self,name):
+            Flowable.__init__(self); self.scene=figures()[name]; self.width=WIDTH; self.height=self.scene.h*WIDTH/self.scene.w
+        def draw(self): self.scene.draw(self.canv,WIDTH)
+    heading('ARCHITECTURE / 01','어디에서 실행되고, 어디를 신뢰하는가?')
+    story.append(ArchitectureFigure('system'));story.append(Spacer(1,14))
+    table([['구성 요소','직접 맡은 역할'],['노트북 승인 도구','원문/대상 확인과 요청 서명. 승인 개인키는 노트북에 유지.'],['Linux CA / libteec','데이터 해시·요청 파일 준비, 세션 유지, 결과 서명 검증.'],['OP-TEE TA / OS','고정 승인 공개키로 검증, 실제 데이터 키 사용 및 영속 객체 관리.'],['tee-supplicant / REE FS','저장소 I/O 지원. Linux에 평문 개인키를 반환하는 API와는 다름.']],[165,WIDTH-165])
+    add('화살표는 주요 기능 경로를 요약한다. 승인 파일 전달은 현재 수동 파일 전송이며 네트워크 승인 서버는 구현하지 않았다. Linux 침해나 저장소 롤백까지 방어했다고 의미하지 않는다.','small')
+    story.append(PageBreak())
+    heading('ARCHITECTURE / 02','하나의 요청을 승인하고 서명하기까지')
+    story.append(ArchitectureFigure('sequence'));story.append(Spacer(1,14))
+    add('같은 세션을 유지하는 이유','h3')
+    add('TA는 원문 해시, 랜덤 챌린지, 실제 데이터 키 핸들을 세션 상태에 연결한다. CA는 챌린지를 받은 뒤 공개키 지문과 해시를 조합하여 요청 파일을 만든다. 파일을 승인받는 동안 세션을 유지해야 같은 요청으로 검증된다.')
+    table([['서명 종류','검증 주체와 의미'],['노트북의 승인 서명','TA가 고정 승인 공개키로 검증: 이 요청에 대한 허가.'],['TA의 데이터 서명','CA가 데이터 공개키로 검증: 서명 대상 데이터의 일치.']],[165,WIDTH-165])
+    add('실물 근거: 정상 승인은 성공했고, 승인 서명 변조·다른 승인키·새 요청에 과거 승인을 재사용한 경우 TA가 거부했다. 특정 Linux 프로세스 신원의 증명은 아니다.','small')
+    story.append(PageBreak())
+    heading('ARCHITECTURE / 03','요청 계약과 상태 수명')
+    story.append(ArchitectureFigure('request'));story.append(Spacer(1,15))
+    story.append(ArchitectureFigure('lifetime'));story.append(Spacer(1,14))
+    add('재사용을 거부하는 근거','h3')
+    add('메시지 해시뿐 아니라 대상 키·새 챌린지·TA UUID·동작을 함께 승인에 묶는다. 새 요청의 챌린지가 다르면 과거 서명은 TA가 재구성한 요청과 맞지 않는다. 키를 유지하는 것과 승인 상태를 유지하는 것은 별개다.')
+    add('상태도는 현재 소스의 처리 규칙이다. 재부팅 공개키 동일성과 새 요청 재사용 거부는 실물 확인했다. 같은 세션 중복 제출/사전 오류 재시도까지 실행한 것으로 해석하지 않는다.','small')
+    story.append(PageBreak())
     heading('01 / FOUNDATION','세션·버퍼·해시를 실물 보드에서 확인')
     add('최신 설치 패키지 하나로 기능을 회귀 시험했다. 과거 커밋으로 돌아가 기능별 시연을 구성하지 않았다. 보드와 로컬 deb의 CA/TA 해시도 일치했다.')
     table([['시험','실제 확인 결과'],['PING 4회 → 새 실행 1회','같은 세션 1→4 누적, 새 실행은 다시 1'],['ECHO 일반 / 빈 입력 / 16바이트','입력과 반환 길이·내용 일치'],['잘못된 명령 / PING 타입','TA의 예상 오류를 확인하여 시험 PASS'],['SHA-256 분할 1 / 2 / 4바이트','모든 다이제스트가 sha256sum 기준값과 동일']],[185,WIDTH-185])
@@ -133,7 +157,7 @@ def main():
         canvas.setFont('KR',8); canvas.setFillColor(MUTED); canvas.drawString(82,H-36,'DEVICE TRUST LAB / P0')
         canvas.setStrokeColor(LINE); canvas.line(42,40,W-42,40)
         canvas.setFont('KR',8); canvas.drawString(42,26,'실증일 2026-10-02  ·  실제 SSH 로그와 호스트 비교 결과')
-        canvas.drawRightString(W-42,26,str(doc.page)+' / 5')
+        canvas.drawRightString(W-42,26,str(doc.page)+' / 8')
     a.output.parent.mkdir(parents=True,exist_ok=True)
     SimpleDocTemplate(str(a.output),pagesize=A4,leftMargin=42,rightMargin=42,topMargin=61,bottomMargin=55).build(story,onFirstPage=page,onLaterPages=page)
     print(a.output)

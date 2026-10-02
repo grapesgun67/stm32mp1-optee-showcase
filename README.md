@@ -2,7 +2,7 @@
 
 STM32MP157F-DK2 실물 보드에서 CA/TA 통신, 영속 서명 키, 외부 승인 검증을 구현하고 시험한 공개 포트폴리오입니다.
 
-- **[제출용 PDF · 5쪽](downloads/p0-optee-portfolio.pdf)**
+- **[제출용 PDF · 8쪽](downloads/p0-optee-portfolio.pdf)**
 - **[실증 사례](docs/case-study.md)**
 - **[전체 시험 결과와 로그](evidence/p0-20261002T115454Z/report.md)**
 - [시험 절차 기록](docs/test-procedure.md)
@@ -10,6 +10,12 @@ STM32MP157F-DK2 실물 보드에서 CA/TA 통신, 영속 서명 키, 외부 승�
 GitHub Pages 설정과 배포가 완료되면 다음 주소로 볼 수 있습니다.
 
 `https://grapesgun67.github.io/stm32mp1-optee-showcase/`
+
+## 구조 먼저 보기
+
+![시스템 구조](assets/diagrams/system.svg)
+
+[승인 시퀀스·요청 계약·상태 수명 해설](docs/architecture.md)
 
 ## 확인한 결과
 
@@ -48,7 +54,7 @@ python3 -m http.server 8766 --bind 127.0.0.1
 3. **Actions → Publish OP-TEE showcase → Run workflow**에서 main을 선택합니다.
 4. 완료 후 페이지·로그·PDF 링크를 확인합니다.
 
-워크플로는 수동 실행입니다. 단순 push만으로 사이트를 배포하지 않습니다. 배포 대상으로 전시용 HTML·evidence·downloads만 선택합니다.
+워크플로는 수동 실행입니다. 단순 push만으로 사이트를 배포하지 않습니다. 배포 대상으로 전시용 HTML·도식 assets·evidence·downloads만 선택합니다.
 
 ## PDF 갱신
 
@@ -61,3 +67,5 @@ PYTHONPATH=.local/pdf-tools python3 scripts/build-pdf.py \
 ```
 
 기본 한글 글꼴은 WSL의 Windows 맑은 고딕 경로입니다. 다른 환경에서는 --font/--bold-font에 한글 TTF를 지정합니다. 원본 글꼴 파일은 이 저장소에 포함하지 않습니다. 다른 시험 회차를 반영할 때는 문장·수치·판정도 함께 검토합니다.
+
+도식 재생성: `python3 scripts/architecture.py`. 같은 정의를 웹 SVG와 PDF 벡터 도식에 사용한다.
