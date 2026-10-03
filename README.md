@@ -2,7 +2,9 @@
 
 STM32MP157F-DK2 실물 보드에서 CA/TA 통신, 영속 서명 키, 외부 승인 검증을 구현하고 시험한 공개 포트폴리오입니다.
 
-- **[제출용 PDF · 8쪽](downloads/p0-optee-portfolio.pdf)**
+- **[제출용 PDF · 11쪽](downloads/p0-optee-portfolio.pdf)**
+- **[01–05 세션·메모리·해시·키 코드 해설](docs/fundamentals-walkthrough.md)**
+- **[06 승인 검증 코드 해설](docs/implementation-walkthrough.md)**
 - **[실증 사례](docs/case-study.md)**
 - **[전체 시험 결과와 로그](evidence/p0-20261002T115454Z/report.md)**
 - [시험 절차 기록](docs/test-procedure.md)
@@ -33,7 +35,7 @@ GitHub Pages 설정과 배포가 완료되면 다음 주소로 볼 수 있습니
 
 ## 저장소 범위
 
-이 저장소는 **전시용 자료만** 관리합니다. CA/TA 구현 소스·Yocto 레시피·개발 이력은 별도 private 저장소에 있습니다. 이 저장소를 clone하면 전시 페이지를 볼 수 있지만 Yocto를 빌드할 수 있는 것은 아닙니다.
+이 저장소는 **전시용 자료와 검토한 코드 일부 발췌**를 관리합니다. CA/TA 구현 소스·Yocto 레시피·개발 이력은 별도 private 저장소에 있습니다. 이 저장소를 clone하면 전시 페이지를 볼 수 있지만 Yocto를 빌드할 수 있는 것은 아닙니다.
 
 보고서의 source HEAD는 시험 조사 당시 개발 저장소의 식별값입니다. 설치 파일과 deb 해시는 대조했지만 그 HEAD가 과거 deb의 빌드 입력이었다고 확정하지 않습니다.
 
@@ -69,3 +71,7 @@ PYTHONPATH=.local/pdf-tools python3 scripts/build-pdf.py \
 기본 한글 글꼴은 WSL의 Windows 맑은 고딕 경로입니다. 다른 환경에서는 --font/--bold-font에 한글 TTF를 지정합니다. 원본 글꼴 파일은 이 저장소에 포함하지 않습니다. 다른 시험 회차를 반영할 때는 문장·수치·판정도 함께 검토합니다.
 
 도식 재생성: `python3 scripts/architecture.py`. 같은 정의를 웹 SVG와 PDF 벡터 도식에 사용한다.
+
+코드 해설 재생성: `python3 scripts/build-walkthrough.py`. 공개용 서술과 발췌는 `docs/implementation-story.json`에서 관리합니다.
+
+기초 5개 장 재생성: `python3 scripts/build-fundamentals.py`. 검토한 발췌·설명은 `docs/fundamentals-story.json`, 실제 결과는 공개 evidence를 사용합니다.

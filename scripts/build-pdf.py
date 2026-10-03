@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create a eight-page submission PDF from the published P0 result JSON."""
+"""Create an eleven-page submission PDF from the published P0 result JSON."""
 import argparse, json, re
 from pathlib import Path
 from xml.sax.saxutils import escape
@@ -67,9 +67,9 @@ def main():
     table([['실증 결과','확인 범위'],['21개 실행·확인 항목 PASS','기초 기능 · 승인 정상/거부 · 재부팅 키 유지'],['실물 보드 / SSH 수집','2026-10-02 · portfolio-hello 1.0-r0.10']],[165,WIDTH-165])
     add('두 키의 역할과 실행 경계','h3'); story.append(Diagram()); story.append(Spacer(1,14))
     add('노트북 승인키는 요청 허가를 증명하고, TA 데이터 키는 허가된 데이터에 서명한다. 두 키를 분리했으며 개인키 반환 명령은 제공하지 않는다.')
-    add('직접 구현·통합한 범위','h3')
+    add('구현·통합 범위와 개발 방식','h3')
     add('CA/TA 명령 계약과 세션 상태, 스트리밍 해시, 영속 서명 키, 132바이트 승인 요청 직렬화, 승인 검증·요청 소비, 노트북 승인 도구, Yocto 패키징 및 실물 시험.')
-    add('OP-TEE 암호/저장 API, OpenSSL, ST BSP는 기반 기술로 사용했다. 본 자료는 실제 SSH 출력과 호스트 비교 결과를 요약하며, 화면 캡처를 합성한 자료가 아니다. 21 PASS는 상세 로드맵 전체 완료나 보안 인증을 의미하지 않는다.','small')
+    add('초기 기능 구현 후 AI 검토·수정안을 diff로 확인해 반영하는 방식으로 진행했다. TA 입력 검사 보완에 도움을 받았다. OP-TEE 암호/저장 API, OpenSSL, ST BSP는 기반 기술로 사용했다. 본 자료는 실제 SSH 출력과 호스트 비교 결과를 요약하며, 화면 캡처를 합성한 자료가 아니다. 21 PASS는 상세 로드맵 전체 완료나 보안 인증을 의미하지 않는다.','small')
     story.append(PageBreak())
 
     class ArchitectureFigure(Flowable):
@@ -134,6 +134,76 @@ def main():
     add('재부팅 후 과거 공개키 파일을 입력한 독립 서명 검증은 아직 하지 않았다. 이번 키 시험은 공개키 동일성과 파일/서비스 유지 확인까지다.','small')
     story.append(PageBreak())
 
+    foundations=json.loads((ROOT/'docs/fundamentals-story.json').read_text())['chapters']
+    def compact_code(code):
+        from textwrap import dedent
+        body='<br/>'.join(escape(line).replace(' ', '&#160;') for line in dedent(code).splitlines())
+        block=Table([[p(body,'mono')]],colWidths=[WIDTH])
+        block.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,-1),PALE),('LEFTPADDING',(0,0),(-1,-1),12),('TOPPADDING',(0,0),(-1,-1),10),('BOTTOMPADDING',(0,0),(-1,-1),10)]))
+        story.extend([block,Spacer(1,10)])
+    heading('CODE / STATE & MEMORY','데이터보다 먼저 수명을 설계하기')
+    add('문제 — 호출이 끝나도 남길 상태와 정리할 메모리는?','h3')
+    add('카운터와 해시 연산은 여러 요청 사이에 유지해야 한다. 반면 ECHO 호출의 버퍼를 TA가 소유한 메모리처럼 해제해서는 안 된다. 세션 상태와 호출 버퍼의 수명을 구분했다.')
+    table([['기능','코드의 선택 · 이유'],['PING / session_context','세션별 구조체에 카운터 보관. 새 연결은 0부터 시작.'],['ECHO / tmpref → memref','CA 배열을 전달하고 TA는 빌려 사용. 실제 반환 길이 확인.'],['HASH / hash_op','같은 연산 핸들에 조각 누적. FINAL은 별도 32바이트 출력.']],[145,WIDTH-145])
+    add('핵심 코드 — 세션 종료 시 소유한 자원을 정리','h3')
+    close=foundations[0]['snippets'][1]
+    compact_code(close['code'])
+    add('TA_CloseSessionEntryPoint / '+close['path']+' '+close['lines']+'행. 앞선 NULL 검사와 함수 선언은 생략했다. TEE_CloseObject는 열린 핸들을 닫으며 저장된 키를 삭제하지 않는다.','small')
+    add('입력 검사와 해시 상태 정책','h3')
+    add('ECHO는 출력 용량이 부족하면 필요한 size를 반환한다. HASH_FINAL도 작은 버퍼 오류에서는 연산을 유지해 재시도를 허용하지만, 실제 최종화 시도 뒤에는 연산을 해제한다. 반복 BEGIN은 현재 계산을 보존하며 거부한다.','small')
+    add('실물 근거와 한계','h3')
+    add('PING 4회 누적·새 실행 1회 초기화, 일반/빈 입력/16바이트 ECHO, 1·2·4바이트 분할 해시의 sha256sum 일치를 확인했다. 동시 세션·작은 출력 버퍼 재시도·HASH 오류 순서는 미시험이다.','small')
+    add('사용자 회고: 기능을 먼저 구현하고 AI 수정안을 diff로 확인해 반영했다. 특히 타입·memref·길이·값 검사 보완에 도움을 받았다. 위 설명은 현재 코드의 동작이며 최초 설계 동기를 추정하지 않는다.','small')
+    add('<link href="https://grapesgun67.github.io/stm32mp1-optee-showcase/fundamentals.html" color="#176650">웹 상세: 01 세션 → 02 버퍼 → 03 분할 SHA-256</link>','small')
+    add('발췌 코드 BSD-2-Clause / portfolio-hello contributors. 전문: assets/code/LICENSE.','small')
+    story.append(PageBreak())
+
+    heading('CODE / KEY LIFETIME','키는 유지하고, 핸들은 닫는다')
+    add('문제 — 재부팅 후 같은 키를 어떻게 다시 사용하는가?','h3')
+    add('핸들 주소를 저장하는 대신 키 속성을 영속 객체로 저장한다. 키 생성과 기존 키 열기를 별도 명령으로 분리하고, 생성에는 OVERWRITE를 넣지 않아 기존 객체를 보존한다.')
+    table([['객체 / 연산','수명과 역할'],['Transient RSA keypair','GenerateKey로 생성 → 영속 객체에 저장 → 임시 객체 해제.'],['Persistent object','같은 TA UUID / Object ID로 다음 세션에서 다시 열기.'],['Session signing_key','열린 객체의 핸들. 세션 종료 시 닫기.'],['Signing operation','키를 연결해 해시 서명. 연산 후 핸들 해제.']],[160,WIDTH-160])
+    add('핵심 코드 — 기존 객체를 열고 실패를 확인','h3')
+    opening=foundations[4]['snippets'][1]
+    compact_code(opening['code'])
+    add('open_signing_key / '+opening['path']+' '+opening['lines']+'행. 다음 코드는 객체 종류·크기를 검사한 뒤에만 state에 핸들을 저장한다. 공유 플래그가 없어 동시 열기는 충돌할 수 있다.','small')
+    add('개인키 보호와 공개키 검증을 구분','h3')
+    add('TA는 공개 속성 n/e를 내보내고 승인된 해시를 RSA PKCS#1 v1.5 / SHA-256으로 서명한다. CA는 OpenSSL 공개키 객체를 구성한다. public_check는 키 검사이고, verify는 서명·해시의 일치 검사다. 둘 다 공개키 소유자의 신원을 자동으로 증명하지 않는다.','small')
+    add('실물 근거와 한계','h3')
+    add('정상 승인 후 원본 서명 검증과 변경 데이터 거부, 재부팅 전후 공개키 n/e 동일성을 확인했다. 이전 공개키 파일을 사용한 재부팅 후 독립 서명 검증은 미실행이다. 키 유지 성공만으로 REE FS 롤백 방지를 주장하지 않는다.','small')
+    add('<link href="https://grapesgun67.github.io/stm32mp1-optee-showcase/fundamentals.html#signing" color="#176650">웹 상세: 04 키 생성·서명 → 05 영속 저장</link>','small')
+    add('발췌 코드 BSD-2-Clause / portfolio-hello contributors. 전문: assets/code/LICENSE.','small')
+    story.append(PageBreak())
+
+    heading('CODE / DESIGN REVIEW','승인된 데이터만 서명하기')
+    narrative=json.loads((ROOT/'docs/implementation-story.json').read_text())
+    add('문제 — 승인받은 해시 A 대신 해시 B를 보내면?','h3')
+    add('CA가 승인을 받은 뒤 다른 해시를 보내고, TA가 그 값을 그대로 서명한다면 승인 대상과 서명 대상이 달라진다. CA의 호출 순서에 기대지 않고 TA가 둘을 연결해야 한다.')
+    add('핵심 코드 — 세션의 해시를 보존하고, 승인 후 서명','h3')
+    first=narrative['sections'][3]['code'].splitlines()[1:]
+    tail=narrative['sections'][4]['code'].splitlines()
+    start=next(i for i,line in enumerate(tail) if 'result = verify_approval' in line)
+    excerpt=[line[4:] for line in first]
+    excerpt.append('// ... request consumption / hashing / error checks omitted ...')
+    excerpt.extend(line[4:] for line in tail[start:start+5])
+    # Preserve source statements; only wrap the long signing call for the page.
+    excerpt[-1]=excerpt[-1].replace('params[1].memref.buffer, &output_size);',
+                                    '\n    params[1].memref.buffer, &output_size);')
+    code_html='<br/>'.join(escape(line).replace(' ', '&#160;') for line in '\n'.join(excerpt).splitlines())
+    block=Table([[p(code_html,'mono')]],colWidths=[WIDTH])
+    block.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,-1),PALE),('LEFTPADDING',(0,0),(-1,-1),12),('RIGHTPADDING',(0,0),(-1,-1),12),('TOPPADDING',(0,0),(-1,-1),12),('BOTTOMPADDING',(0,0),(-1,-1),12)]))
+    story.extend([block,Spacer(1,8)])
+    add('handle_sign_authorized() / entry.c 380–381, 391–395행 비연속 발췌. 중간 처리와 앞뒤 입력 검사·정리는 생략하고 긴 호출만 줄바꿈했다. 실행 가능한 전체 함수는 아니다.','small')
+    add('설계 이유 — 승인한 요청과 실제 키 사용을 연결','h3')
+    add('<b>① 대상 고정:</b> pending_digest는 처음 요청에서 TA가 보관한 해시다.<br/><b>② 요청 결합:</b> build_pending_request()가 세션의 해시·챌린지·실제 키로 요청을 재구성한다.<br/><b>③ 승인 강제:</b> verify_approval() 실패 시 서명 경로에 도달하지 않는다. 성공하면 보존한 같은 해시를 sign_stored_digest()에 전달한다.','small')
+    add('생략한 구간은 요청을 소비하고 재구성한 요청의 해시를 계산한다. 사전 파라미터 검사 이후의 처리 시도는 실패해도 소비한다. 챌린지는 CA 신원 인증이 아닌 특정 요청의 승인 검증에 사용한다.','small')
+    add('실물 보드에서 확인한 결과','h3')
+    table([['정상 승인','변조 · 다른 승인키 · 새 요청에 과거 승인'],['서명 및 원본 데이터 검증 성공','TA 거부 / 예상 오류와 종료값 확인']],[165,WIDTH-165])
+    add('2026-10-02 실증. 같은 세션 재제출·직접 명령 우회·모든 파라미터 오류는 미시험이며, 위 결과가 모든 코드 경로의 검증을 뜻하지는 않는다.','small')
+    add('개발 방식: 초기 구현·커밋 → AI 검토 → diff 확인 → 선택 반영. 사용자 회고에서 TA의 타입·버퍼·값 검사에 도움을 받았다고 밝혔다. 줄별 작성 기여를 단정하지 않는다.','small')
+    add('<link href="https://grapesgun67.github.io/stm32mp1-optee-showcase/implementation.html" color="#176650">상세 코드 해설 ↗ 입력 검사 · 협업 과정 · Git 이력 · 기능별 코드 위치</link>','small')
+    add('발췌 코드: BSD-2-Clause / portfolio-hello contributors. 라이선스 전문: 공개 저장소 assets/code/LICENSE 및 웹 해설.','small')
+    story.append(PageBreak())
+
     heading('04 / REPRODUCIBILITY','실행 근거와 한계를 함께 제출')
     add('실증 회차: '+escape(base['run_id']),'small')
     add('설치 패키지: '+escape(base['package']),'body')
@@ -146,7 +216,7 @@ def main():
     add('저장소 내 증거: evidence/'+escape(base['run_id'])+'/report.md<br/>사례 문서: docs/case-study.md<br/>웹페이지: index.html','small')
     add('GitHub Pages 사이트 주소','h3')
     add('https://grapesgun67.github.io/stm32mp1-optee-showcase/','small')
-    add('공개 저장소에는 실증 문서·로그·PDF를 제공한다. CA/TA 소스와 개발 이력은 별도 비공개로 관리한다. 공개 URL을 제출하기 전 Pages 배포 성공과 실제 접근을 확인한다.','small')
+    add('공개 저장소에는 실증 문서·로그·PDF를 제공한다. 전체 CA/TA 소스와 개발 이력은 별도 비공개로 관리하며, 검토한 코드 일부와 해설은 공개한다. 공개 URL을 제출하기 전 Pages 배포 성공과 실제 접근을 확인한다.','small')
     add('미검증 항목과 다음 단계','h3')
     add('동일 세션 재전송·직접 명령 우회, 상세 버퍼/상태 오류, 이전 공개키 독립 검증, 키 교체·회수 및 강한 롤백 방지는 후속 검증 항목이다. 실제 차량 적용, AUTOSAR/Uptane 준수 또는 제품 수준 보안 인증을 주장하지 않는다.','small')
     add('다음 확장은 A7↔M4 및 외부 MCU 통신, 메시지 인증, OTA 설치·복구다. 현재 입증한 키 관리와 요청 승인 범위를 출발점으로 삼는다.','small')
@@ -157,7 +227,7 @@ def main():
         canvas.setFont('KR',8); canvas.setFillColor(MUTED); canvas.drawString(82,H-36,'DEVICE TRUST LAB / P0')
         canvas.setStrokeColor(LINE); canvas.line(42,40,W-42,40)
         canvas.setFont('KR',8); canvas.drawString(42,26,'실증일 2026-10-02  ·  실제 SSH 로그와 호스트 비교 결과')
-        canvas.drawRightString(W-42,26,str(doc.page)+' / 8')
+        canvas.drawRightString(W-42,26,str(doc.page)+' / 11')
     a.output.parent.mkdir(parents=True,exist_ok=True)
     SimpleDocTemplate(str(a.output),pagesize=A4,leftMargin=42,rightMargin=42,topMargin=61,bottomMargin=55).build(story,onFirstPage=page,onLaterPages=page)
     print(a.output)
