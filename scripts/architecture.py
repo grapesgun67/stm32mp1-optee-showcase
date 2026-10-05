@@ -65,7 +65,7 @@ def figures():
     s.arrow(480,512,480,540,AMBER)
     s.text(744,487,'REE에는 보호된 객체 저장',16)
     s.text(744,521,'개인키 반환 API 없음',17,GREEN,True)
-    s.text(744,551,'롤백 방지는 미검증',16,AMBER)
+    s.text(744,551,'저장소 보호: OP-TEE 담당',16,GRAY)
     s.text(35,546,'실선: 요청/호출',16);s.text(35,579,'점선: 저장소 지원 경로',16)
 
     q=Scene('승인부터 데이터 서명까지','CA가 TA와 같은 세션을 유지하며 요청을 노트북에서 승인받고, TA는 자기 상태로 요청을 재구성하여 검증한다.',h=650)
@@ -97,10 +97,19 @@ def figures():
     t.text(30,225,'타입/길이/SHORT_BUFFER 사전 오류: 대기 요청 유지.',17,GRAY)
     t.box(25,238,990,163,PALE);t.text(45,270,'영속 객체: 세션을 닫거나 재부팅해도 같은 데이터 키를 다시 연다',21,GREEN,True)
     t.text(45,306,'세션 종료 → RAM 상태/키 핸들 정리',18);t.text(45,338,'다음 세션 → 같은 TA UUID + Object ID로 기존 키 열기',18)
-    t.text(45,375,'실증: 재부팅 전후 공개키 동일. 동일 세션 재전송 및 저장소 롤백 방지는 별도 미검증.',17,AMBER)
-    return {'system':s,'sequence':q,'request':p,'lifetime':t}
+    t.text(45,375,'실증: 재부팅 전후 공개키 동일. 키 객체와 세션 상태의 수명은 서로 다르다.',17,AMBER)
+    g=Scene('PING과 GET_COUNT의 왕복 흐름','같은 세션에서 CA가 PING으로 증가를 요청하고 GET_COUNT로 카운터를 읽는다. OP-TEE는 진입점을 호출하고 진입점이 state를 내부 함수에 넘긴다.',h=520)
+    for x,title,sub in [(20,'CA · run_ping','operation / 같은 session'),(370,'OP-TEE → TA 진입점','TA_InvokeCommandEntryPoint'),(720,'TA 내부 함수','같은 session_state 사용')]:
+        g.node(x,18,300,86,title,[sub])
+    for x in [170,520,870]:g.arrow(x,112,x,461,LINE,True)
+    rows=[(170,520,150,'① InvokeCommand(PING)'),(520,870,208,'② handle_ping(state, types)'),(870,170,276,'③ ping_count 증가 후 SUCCESS 반환'),(170,520,338,'④ InvokeCommand(GET_COUNT)'),(520,870,396,'⑤ handle_ping_get_count(state, types, params)'),(870,170,459,'⑥ params[0].value.a에 count → CA operation으로 반환')]
+    for x1,x2,y,label in rows:
+        g.text(min(x1,x2)+12,y-13,label,16)
+        g.arrow(x1,y,x2,y)
+    g.text(30,502,'CA는 반환된 operation.params[0].value.a를 읽고 예상 횟수와 비교한다. 다음 반복도 같은 세션이다.',17,GRAY)
+    return {'system':s,'sequence':q,'request':p,'lifetime':t,'ping':g}
 
 if __name__=='__main__':
     out=Path(__file__).resolve().parents[1]/'assets/diagrams';out.mkdir(parents=True,exist_ok=True)
     for name,scene in figures().items(): (out/(name+'.svg')).write_text(scene.svg())
-    print('4 shared architecture diagrams generated')
+    print('5 shared diagrams generated')

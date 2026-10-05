@@ -2,9 +2,9 @@
 
 STM32MP157F-DK2 실물 보드에서 CA/TA 통신, 영속 서명 키, 외부 승인 검증을 구현하고 시험한 공개 포트폴리오입니다.
 
-- **[제출용 PDF · 11쪽](downloads/p0-optee-portfolio.pdf)**
-- **[01–05 세션·메모리·해시·키 코드 해설](docs/fundamentals-walkthrough.md)**
-- **[06 승인 검증 코드 해설](docs/implementation-walkthrough.md)**
+- **[PDF 보기 · 11쪽](downloads/p0-optee-portfolio.pdf)**
+- **[01–05 세션·메모리·해시·키 코드 설명](docs/fundamentals-walkthrough.md)**
+- **[06 승인 검증 코드 설명](docs/implementation-walkthrough.md)**
 - **[실증 사례](docs/case-study.md)**
 - **[전체 시험 결과와 로그](evidence/p0-20261002T115454Z/report.md)**
 - [시험 절차 기록](docs/test-procedure.md)
@@ -17,7 +17,7 @@ GitHub Pages 설정과 배포가 완료되면 다음 주소로 볼 수 있습니
 
 ![시스템 구조](assets/diagrams/system.svg)
 
-[승인 시퀀스·요청 계약·상태 수명 해설](docs/architecture.md)
+[승인 시퀀스·요청 계약·상태 수명 설명](docs/architecture.md)
 
 ## 확인한 결과
 
@@ -72,6 +72,6 @@ PYTHONPATH=.local/pdf-tools python3 scripts/build-pdf.py \
 
 도식 재생성: `python3 scripts/architecture.py`. 같은 정의를 웹 SVG와 PDF 벡터 도식에 사용한다.
 
-코드 해설 재생성: `python3 scripts/build-walkthrough.py`. 공개용 서술과 발췌는 `docs/implementation-story.json`에서 관리합니다.
+코드 설명 재생성: `python3 scripts/build-walkthrough.py`. 공개용 서술과 발췌는 `docs/implementation-story.json`에서 관리합니다.
 
 기초 5개 장 재생성: `python3 scripts/build-fundamentals.py`. 검토한 발췌·설명은 `docs/fundamentals-story.json`, 실제 결과는 공개 evidence를 사용합니다.

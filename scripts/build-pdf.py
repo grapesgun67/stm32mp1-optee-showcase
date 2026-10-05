@@ -93,7 +93,6 @@ def main():
     story.append(ArchitectureFigure('lifetime'));story.append(Spacer(1,14))
     add('재사용을 거부하는 근거','h3')
     add('메시지 해시뿐 아니라 대상 키·새 챌린지·TA UUID·동작을 함께 승인에 묶는다. 새 요청의 챌린지가 다르면 과거 서명은 TA가 재구성한 요청과 맞지 않는다. 키를 유지하는 것과 승인 상태를 유지하는 것은 별개다.')
-    add('상태도는 현재 소스의 처리 규칙이다. 재부팅 공개키 동일성과 새 요청 재사용 거부는 실물 확인했다. 같은 세션 중복 제출/사전 오류 재시도까지 실행한 것으로 해석하지 않는다.','small')
     story.append(PageBreak())
     heading('01 / FOUNDATION','세션·버퍼·해시를 실물 보드에서 확인')
     add('최신 설치 패키지 하나로 기능을 회귀 시험했다. 과거 커밋으로 돌아가 기능별 시연을 구성하지 않았다. 보드와 로컬 deb의 CA/TA 해시도 일치했다.')
@@ -104,8 +103,6 @@ def main():
     digest=re.search(r'([a-f0-9]{64})',tests['HASH-REF']['output'])[1]
     log(['$ portfolio-hello --hash test 1','$ portfolio-hello --hash test 2','$ portfolio-hello --hash test 4','sha256sum / TA outputs: same 32-byte digest',digest[:32],digest[32:]])
     add('위 명령의 각 실행은 exit=0이며 같은 결과를 반환했다. 다이제스트는 지면상 두 줄로 나눴다. 원본 로그에는 전체 64자리 값이 있다.','small')
-    add('검증 범위','h3')
-    add('새 실행 카운터 초기화는 확인했다. 최초 COUNT=0 직접 호출, 동시 세션 분리, 내장 NUL·작은 출력 버퍼 재시도 및 HASH 오류 순서 시험은 이번 범위에서 제외했다.','small')
     story.append(PageBreak())
 
     heading('02 / AUTHORIZATION','정상 승인 성공과 잘못된 승인 거부')
@@ -118,7 +115,6 @@ def main():
     add('origin=0x00000004는 TA에서 반환된 결과다. 파일 전송이나 길이 검사에서 실패한 것을 승인 거부 성공으로 세지 않았다. 거부 시험에서 nonzero 종료는 기대 동작이므로 시험 판정은 PASS다.','small')
     add('시험 방법과 구분','h3')
     add('정상/변조용 원본 서명은 사용자가 기존 도구에서 APPROVE와 키 암호를 입력했다. 다른 키 시험은 별도 메모리 내 시험키를 사용했고 기존 키를 교체하지 않았다. 재사용 시험은 성공했던 서명을 새 챌린지 요청에 제출했다.','small')
-    add('같은 세션에서 두 번 제출한 시험, 준비 없는 호출 및 직접 명령 우회 시험은 미실행이다. 정상 데이터 변조 거부와 승인 서명 변조 거부는 서로 다른 시험이다.','small')
     story.append(PageBreak())
 
     heading('03 / PERSISTENCE','재부팅 후에도 같은 키가 유지되는가?')
@@ -130,8 +126,6 @@ def main():
     add('지문은 두 줄로 표시했다. 단순 출력 유무가 아니라 실제 n/e 바이트를 비교했다. 재부팅 판정은 SSH 재접속과 boot ID 비교에 근거하며 UART 부팅 영상은 아니다.','small')
     add('저장 위치와 보안 한계','h3')
     add('기존 레시피 및 마운트 확인에서 REE FS 저장 위치는 /var/lib/tee이며 루트 ext4 파일시스템에 속한다. TA는 영속 객체 API로 키를 저장하고 핸들만 세션에서 관리한다.')
-    add('<b>키 유지 성공 ≠ 롤백 방지 입증.</b> 이전 로그의 REE FS 단조 카운터 경고는 미해결로 남겼다. HUK·보안 부팅·저장소 롤백 방지 수준은 이번 시험으로 판단하지 않는다.')
-    add('재부팅 후 과거 공개키 파일을 입력한 독립 서명 검증은 아직 하지 않았다. 이번 키 시험은 공개키 동일성과 파일/서비스 유지 확인까지다.','small')
     story.append(PageBreak())
 
     foundations=json.loads((ROOT/'docs/fundamentals-story.json').read_text())['chapters']
@@ -144,16 +138,14 @@ def main():
     heading('CODE / STATE & MEMORY','데이터보다 먼저 수명을 설계하기')
     add('문제 — 호출이 끝나도 남길 상태와 정리할 메모리는?','h3')
     add('카운터와 해시 연산은 여러 요청 사이에 유지해야 한다. 반면 ECHO 호출의 버퍼를 TA가 소유한 메모리처럼 해제해서는 안 된다. 세션 상태와 호출 버퍼의 수명을 구분했다.')
-    table([['기능','코드의 선택 · 이유'],['PING / session_context','세션별 구조체에 카운터 보관. 새 연결은 0부터 시작.'],['ECHO / tmpref → memref','CA 배열을 전달하고 TA는 빌려 사용. 실제 반환 길이 확인.'],['HASH / hash_op','같은 연산 핸들에 조각 누적. FINAL은 별도 32바이트 출력.']],[145,WIDTH-145])
+    story.append(ArchitectureFigure('ping'));story.append(Spacer(1,8))
     add('핵심 코드 — 세션 종료 시 소유한 자원을 정리','h3')
     close=foundations[0]['snippets'][1]
-    compact_code(close['code'])
-    add('TA_CloseSessionEntryPoint / '+close['path']+' '+close['lines']+'행. 앞선 NULL 검사와 함수 선언은 생략했다. TEE_CloseObject는 열린 핸들을 닫으며 저장된 키를 삭제하지 않는다.','small')
-    add('입력 검사와 해시 상태 정책','h3')
+    compact_code(close['prototype']+'\n\n/* Body excerpt */\n'+close['code'])
+    add('TA_CloseSessionEntryPoint / '+close['path']+' '+close['lines']+'행. 함수 원형을 표시했으며, 본문의 앞선 NULL 검사는 생략했다. TEE_CloseObject는 열린 핸들을 닫으며 저장된 키를 삭제하지 않는다.','small')
     add('ECHO는 출력 용량이 부족하면 필요한 size를 반환한다. HASH_FINAL도 작은 버퍼 오류에서는 연산을 유지해 재시도를 허용하지만, 실제 최종화 시도 뒤에는 연산을 해제한다. 반복 BEGIN은 현재 계산을 보존하며 거부한다.','small')
-    add('실물 근거와 한계','h3')
-    add('PING 4회 누적·새 실행 1회 초기화, 일반/빈 입력/16바이트 ECHO, 1·2·4바이트 분할 해시의 sha256sum 일치를 확인했다. 동시 세션·작은 출력 버퍼 재시도·HASH 오류 순서는 미시험이다.','small')
-    add('사용자 회고: 기능을 먼저 구현하고 AI 수정안을 diff로 확인해 반영했다. 특히 타입·memref·길이·값 검사 보완에 도움을 받았다. 위 설명은 현재 코드의 동작이며 최초 설계 동기를 추정하지 않는다.','small')
+    add('실물 확인 결과','h3')
+    add('PING 4회 누적·새 실행 1회 초기화, 일반/빈 입력/16바이트 ECHO, 1·2·4바이트 분할 해시의 sha256sum 일치를 확인했다.','small')
     add('<link href="https://grapesgun67.github.io/stm32mp1-optee-showcase/fundamentals.html" color="#176650">웹 상세: 01 세션 → 02 버퍼 → 03 분할 SHA-256</link>','small')
     add('발췌 코드 BSD-2-Clause / portfolio-hello contributors. 전문: assets/code/LICENSE.','small')
     story.append(PageBreak())
@@ -164,12 +156,12 @@ def main():
     table([['객체 / 연산','수명과 역할'],['Transient RSA keypair','GenerateKey로 생성 → 영속 객체에 저장 → 임시 객체 해제.'],['Persistent object','같은 TA UUID / Object ID로 다음 세션에서 다시 열기.'],['Session signing_key','열린 객체의 핸들. 세션 종료 시 닫기.'],['Signing operation','키를 연결해 해시 서명. 연산 후 핸들 해제.']],[160,WIDTH-160])
     add('핵심 코드 — 기존 객체를 열고 실패를 확인','h3')
     opening=foundations[4]['snippets'][1]
-    compact_code(opening['code'])
+    compact_code(opening['prototype']+'\n\n/* Body excerpt */\n'+opening['code'])
     add('open_signing_key / '+opening['path']+' '+opening['lines']+'행. 다음 코드는 객체 종류·크기를 검사한 뒤에만 state에 핸들을 저장한다. 공유 플래그가 없어 동시 열기는 충돌할 수 있다.','small')
     add('개인키 보호와 공개키 검증을 구분','h3')
     add('TA는 공개 속성 n/e를 내보내고 승인된 해시를 RSA PKCS#1 v1.5 / SHA-256으로 서명한다. CA는 OpenSSL 공개키 객체를 구성한다. public_check는 키 검사이고, verify는 서명·해시의 일치 검사다. 둘 다 공개키 소유자의 신원을 자동으로 증명하지 않는다.','small')
-    add('실물 근거와 한계','h3')
-    add('정상 승인 후 원본 서명 검증과 변경 데이터 거부, 재부팅 전후 공개키 n/e 동일성을 확인했다. 이전 공개키 파일을 사용한 재부팅 후 독립 서명 검증은 미실행이다. 키 유지 성공만으로 REE FS 롤백 방지를 주장하지 않는다.','small')
+    add('실물 확인 결과','h3')
+    add('정상 승인 후 원본 서명 검증과 변경 데이터 거부, 재부팅 전후 공개키 n/e 동일성을 확인했다.','small')
     add('<link href="https://grapesgun67.github.io/stm32mp1-optee-showcase/fundamentals.html#signing" color="#176650">웹 상세: 04 키 생성·서명 → 05 영속 저장</link>','small')
     add('발췌 코드 BSD-2-Clause / portfolio-hello contributors. 전문: assets/code/LICENSE.','small')
     story.append(PageBreak())
@@ -182,7 +174,7 @@ def main():
     first=narrative['sections'][3]['code'].splitlines()[1:]
     tail=narrative['sections'][4]['code'].splitlines()
     start=next(i for i,line in enumerate(tail) if 'result = verify_approval' in line)
-    excerpt=[line[4:] for line in first]
+    excerpt=narrative['sections'][3]['prototype'].splitlines()+['','/* Body excerpt */']+[line[4:] for line in first]
     excerpt.append('// ... request consumption / hashing / error checks omitted ...')
     excerpt.extend(line[4:] for line in tail[start:start+5])
     # Preserve source statements; only wrap the long signing call for the page.
@@ -198,10 +190,9 @@ def main():
     add('생략한 구간은 요청을 소비하고 재구성한 요청의 해시를 계산한다. 사전 파라미터 검사 이후의 처리 시도는 실패해도 소비한다. 챌린지는 CA 신원 인증이 아닌 특정 요청의 승인 검증에 사용한다.','small')
     add('실물 보드에서 확인한 결과','h3')
     table([['정상 승인','변조 · 다른 승인키 · 새 요청에 과거 승인'],['서명 및 원본 데이터 검증 성공','TA 거부 / 예상 오류와 종료값 확인']],[165,WIDTH-165])
-    add('2026-10-02 실증. 같은 세션 재제출·직접 명령 우회·모든 파라미터 오류는 미시험이며, 위 결과가 모든 코드 경로의 검증을 뜻하지는 않는다.','small')
-    add('개발 방식: 초기 구현·커밋 → AI 검토 → diff 확인 → 선택 반영. 사용자 회고에서 TA의 타입·버퍼·값 검사에 도움을 받았다고 밝혔다. 줄별 작성 기여를 단정하지 않는다.','small')
-    add('<link href="https://grapesgun67.github.io/stm32mp1-optee-showcase/implementation.html" color="#176650">상세 코드 해설 ↗ 입력 검사 · 협업 과정 · Git 이력 · 기능별 코드 위치</link>','small')
-    add('발췌 코드: BSD-2-Clause / portfolio-hello contributors. 라이선스 전문: 공개 저장소 assets/code/LICENSE 및 웹 해설.','small')
+    add('2026-10-02 실증.','small')
+    add('<link href="https://grapesgun67.github.io/stm32mp1-optee-showcase/implementation.html" color="#176650">상세 코드 설명 ↗ 입력 검사 · 협업 과정 · Git 이력 · 기능별 코드 위치</link>','small')
+    add('발췌 코드: BSD-2-Clause / portfolio-hello contributors. 라이선스 전문: 공개 저장소 assets/code/LICENSE 및 웹 설명.','small')
     story.append(PageBreak())
 
     heading('04 / REPRODUCIBILITY','실행 근거와 한계를 함께 제출')
@@ -216,9 +207,10 @@ def main():
     add('저장소 내 증거: evidence/'+escape(base['run_id'])+'/report.md<br/>사례 문서: docs/case-study.md<br/>웹페이지: index.html','small')
     add('GitHub Pages 사이트 주소','h3')
     add('https://grapesgun67.github.io/stm32mp1-optee-showcase/','small')
-    add('공개 저장소에는 실증 문서·로그·PDF를 제공한다. 전체 CA/TA 소스와 개발 이력은 별도 비공개로 관리하며, 검토한 코드 일부와 해설은 공개한다. 공개 URL을 제출하기 전 Pages 배포 성공과 실제 접근을 확인한다.','small')
-    add('미검증 항목과 다음 단계','h3')
-    add('동일 세션 재전송·직접 명령 우회, 상세 버퍼/상태 오류, 이전 공개키 독립 검증, 키 교체·회수 및 강한 롤백 방지는 후속 검증 항목이다. 실제 차량 적용, AUTOSAR/Uptane 준수 또는 제품 수준 보안 인증을 주장하지 않는다.','small')
+    add('공개 저장소에는 실증 문서·로그·PDF를 제공한다. 전체 CA/TA 소스와 개발 이력은 별도 비공개로 관리하며, 검토한 코드 일부와 설명은 공개한다. 공개 URL을 제출하기 전 Pages 배포 성공과 실제 접근을 확인한다.','small')
+    add('개발 방식과 확인 범위','h3')
+    add('초기 구현·커밋 → AI 검토 → diff 확인 → 선택 반영. TA 타입·버퍼·값 검사 보완에 AI 도움을 받았다. 개별 줄의 작성 기여를 단정하지 않는다.','small')
+    add('동시 세션·카운터 경계, ECHO 내장 NUL·작은 출력 버퍼 재시도, HASH 오류 순서, 동일 세션 재전송·직접 명령 우회, 이전 공개키 독립 검증 및 키 교체·회수는 후속 검증 항목이다. REE FS 단조 카운터 경고는 미해결이며 HUK·보안 부팅·롤백 방지는 입증하지 않았다. 실제 차량 적용, AUTOSAR/Uptane 준수 또는 제품 수준 보안 인증을 주장하지 않는다.','small')
     add('다음 확장은 A7↔M4 및 외부 MCU 통신, 메시지 인증, OTA 설치·복구다. 현재 입증한 키 관리와 요청 승인 범위를 출발점으로 삼는다.','small')
     def page(canvas,doc):
         canvas.setTitle('STM32MP157F-DK2 OP-TEE 실증 포트폴리오')

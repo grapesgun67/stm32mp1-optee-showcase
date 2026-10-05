@@ -8,7 +8,7 @@
 
 ## 구조를 먼저 보기
 
-[구조도 4종과 해설](architecture.md): 전체 시스템 → 승인 시퀀스 → 요청 계약 → 세션/키 수명.
+[구조도 4종과 설명](architecture.md): 전체 시스템 → 승인 시퀀스 → 요청 계약 → 세션/키 수명.
 
 ![시스템 구조](../assets/diagrams/system.svg)
 
@@ -39,4 +39,4 @@ OP-TEE 저장소/암호 API, OpenSSL, ST BSP는 기반 기술로 사용했다. �
 
 [승인된 데이터만 서명하기](implementation-walkthrough.md): 사용자 구현 회고, AI 검토로 보완한 입력 검사, 현재 코드와 실제 시험 범위를 연결한다.
 
-[01–05 기초 기능과 키 관리 해설](fundamentals-walkthrough.md): 세션·버퍼·해시·RSA·영속 저장의 현재 코드와 실제 시험 근거.
+[01–05 기초 기능과 키 관리 설명](fundamentals-walkthrough.md): 세션·버퍼·해시·RSA·영속 저장의 현재 코드와 실제 시험 근거.
