@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create an eleven-page submission PDF from the published P0 result JSON."""
+"""Create an eleven-page submission PDF from the published P1 result JSON."""
 import argparse, json, re
 from pathlib import Path
 from xml.sax.saxutils import escape
@@ -40,7 +40,7 @@ def main():
     def p(t,style='body'): return Paragraph(t,styles[style])
     def add(t,style='body'): story.append(p(t,style))
     def heading(n,title):
-        add('P0 / '+n,'small'); add(title,'h2')
+        add('P1 / '+n,'small'); add(title,'h2')
     def table(rows,widths):
         t=Table([[p(escape(str(c)),'cell') for c in row] for row in rows],colWidths=widths,hAlign='LEFT')
         t.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0),PALE),('VALIGN',(0,0),(-1,-1),'TOP'),('LINEBELOW',(0,0),(-1,0),.7,LINE),('LINEBELOW',(0,1),(-1,-1),.35,LINE),('LEFTPADDING',(0,0),(-1,-1),10),('RIGHTPADDING',(0,0),(-1,-1),10),('TOPPADDING',(0,0),(-1,-1),10),('BOTTOMPADDING',(0,0),(-1,-1),10)]))
@@ -216,7 +216,7 @@ def main():
         canvas.setTitle('STM32MP157F-DK2 OP-TEE 실증 포트폴리오')
         canvas.setAuthor('grapesgun67')
         canvas.setFillColor(GREEN); canvas.rect(42,H-36,32,3,stroke=0,fill=1)
-        canvas.setFont('KR',8); canvas.setFillColor(MUTED); canvas.drawString(82,H-36,'DEVICE TRUST LAB / P0')
+        canvas.setFont('KR',8); canvas.setFillColor(MUTED); canvas.drawString(82,H-36,'DEVICE TRUST LAB / P1')
         canvas.setStrokeColor(LINE); canvas.line(42,40,W-42,40)
         canvas.setFont('KR',8); canvas.drawString(42,26,'실증일 2026-10-02  ·  실제 SSH 로그와 호스트 비교 결과')
         canvas.drawRightString(W-42,26,str(doc.page)+' / 11')

@@ -10,7 +10,7 @@
 </style>
 </head>
 <body>
-<header><div class="brand">DEVICE TRUST LAB / P0</div><nav aria-label="페이지 탐색"><a href="#architecture">구조</a><a href="fundamentals.html">구현 설명</a><a href="#evidence">실증</a><a href="#limits">한계</a></nav></header>
+<header><div class="brand">DEVICE TRUST LAB / P1</div><nav aria-label="페이지 탐색"><a href="#architecture">구조</a><a href="fundamentals.html">구현 설명</a><a href="#evidence">실증</a><a href="#limits">한계</a></nav></header>
 <main>
 <div class="hero"><div class="eyebrow">STM32MP157F-DK2 · REAL HARDWARE</div><h1>키를 보관하는 데서,<br><span>사용 권한을 검증하는 데까지.</span></h1><p class="lead">OP-TEE 내부 키로 외부 승인된 요청을 서명하는 서비스. CA/TA 통신부터 영속 키와 챌린지 기반 승인까지 구현하고, 실제 보드의 성공과 거부 결과를 기록했습니다.</p><p><a href="downloads/p0-optee-portfolio.pdf">PDF 보기 · 11쪽 ↗</a></p><div class="chips"><span class="chip">Yocto / OpenSTLinux</span><span class="chip">OP-TEE · CA / TA</span><span class="chip">RSA-2048 · SHA-256</span><span class="chip">SSH 실행 로그</span></div></div>
 <p><a href="fundamentals.html"><strong>개발 과정과 코드 읽기 ↗</strong></a> — 초기 구현, AI 검토, diff 확인을 거쳐 TA의 승인 검증을 보완한 과정</p>
@@ -44,7 +44,7 @@
 </section>
 
 <div class="stats" aria-label="실행 단위별 시험 현황"><div class="stat"><strong>21</strong><span>기대 조건 확인 · PASS</span></div><div class="stat"><strong>0</strong><span>기대 조건 불일치 · FAIL</span></div><div class="stat"><strong>0</strong><span>이번 회차 결과 대기</span></div></div>
-<p class="flow-caption">실행 단위별 집계입니다. 상세 P0 전체 완료율이나 제품 보안 인증을 뜻하지 않습니다.</p>
+<p class="flow-caption">실행 단위별 집계입니다. 상세 P1 전체 완료율이나 제품 보안 인증을 뜻하지 않습니다.</p>
 
 <section id="evidence"><div class="eyebrow">02 / EVIDENCE</div><h2>성공뿐 아니라, 거부해야 할 요청도 확인합니다.</h2><p class="section-note">각 카드를 펼치면 실제 명령과 출력을 볼 수 있습니다. 승인 변조 시험의 nonzero 종료는 예상한 거부이며, 시험 판정은 PASS가 될 수 있습니다.</p><div class="notice">이 패널은 실제 SSH 실행 로그의 공개용 발췌입니다. 터미널 스크린샷을 합성한 이미지가 아닙니다. 미수집 결과는 대기로 표시합니다.</div><div class="filters" aria-label="시험 분류"><button type="button" data-filter="전체" aria-pressed="true">전체</button><button type="button" data-filter="환경" aria-pressed="false">환경</button><button type="button" data-filter="기초" aria-pressed="false">기초 기능</button><button type="button" data-filter="승인" aria-pressed="false">승인 / 거부</button><button type="button" data-filter="키 유지" aria-pressed="false">영속 키</button></div><div class="tests"><article class="test" data-group="환경" data-state="PASS"><div class="test-top"><span class="test-id">ENV</span><span class="badge pass">PASS</span></div><h3>실물 환경·설치 파일 확인</h3><p class="meta">환경 · process exit 0</p><details><summary>실행 로그 보기</summary><pre>$ uname -a; cat /etc/os-release; printf &quot;\nMODEL=&quot;; tr -d &quot;\000&quot; &lt; /proc/device-tree/model; printf &quot;\n&quot;; dpkg-query -W portfolio-hello; systemctl is-active tee-supplicant.service; cat /proc/sys/kernel/random/boot_id; sha256sum /usr/bin/portfolio-hello /usr/lib/optee_armtz/12694b3a-c0af-4915-bf39-a819770b8355.ta
 Linux stm32mp1-board 6.6.129 #1 SMP PREEMPT Thu Mar  5 15:03:43 UTC 2026 armv7l GNU/Linux
@@ -271,7 +271,7 @@ process exit=0
 <li>보드와 로컬 deb의 CA/TA 파일 해시는 대조했습니다. 기록한 저장소 HEAD가 과거 deb의 정확한 빌드 입력이었다는 증명은 확보하지 않았습니다.</li>
 <li>SSH로 수집한 실제 출력의 공개용 발췌입니다. UART 전체 부팅 로그, 실제 데스크톱 스크린샷과 보드 사진은 포함하지 않았습니다.</li></ul><p><a href="case-study.html">사례 문서</a> · <a href="report.html">전체 시험 보고서</a> · <a href="guide.html">직접 실행 가이드</a></p></details></section>
 <section><div class="eyebrow">04 / TRACEABILITY</div><h2>코드와 실행 결과를 연결하는 기록</h2><dl class="facts"><dt>실증 회차</dt><dd><code>p0-20261002T115454Z</code></dd><dt>설치 패키지</dt><dd><code>portfolio-hello_1.0-r0.10_armhf.deb</code></dd><dt>패키지 SHA-256</dt><dd><code>3a40219abc43714e549975a67e2c54029eca297309493dc1660e832d1d7feeea</code></dd><dt>조사 시 소스 HEAD</dt><dd><code>44b7917a028a1eb6863b4bdc7b68ec05a9abff0f</code><br>과거 패키지의 빌드 커밋으로 확정한 값은 아닙니다.</dd><dt>자료 형식</dt><dd>실제 실행 로그 · 판정 JSON · Markdown 보고서 · 로컬 HTML</dd></dl></section>
-</main><footer>P0 / OP-TEE signing service · 실물 보드 검증 · PASS 21 / FAIL 0 / 미실행 0<br>실제 보드 실행 결과와 확인된 한계를 함께 기록합니다. CA/TA 개발 소스는 비공개로 관리합니다.</footer>
+</main><footer>P1 / OP-TEE signing service · 실물 보드 검증 · PASS 21 / FAIL 0 / 미실행 0<br>실제 보드 실행 결과와 확인된 한계를 함께 기록합니다. CA/TA 개발 소스는 비공개로 관리합니다.</footer>
 <script>document.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));document.querySelectorAll('.test').forEach(card=>{card.hidden=button.dataset.filter!=='전체'&&card.dataset.group!==button.dataset.filter;});}));
 const diagramButtons=document.querySelectorAll('[data-diagram]');function selectDiagram(name){diagramButtons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.diagram===name)));document.querySelectorAll('[data-diagram-panel]').forEach(p=>p.hidden=p.dataset.diagramPanel!==name);}diagramButtons.forEach(b=>b.addEventListener('click',()=>selectDiagram(b.dataset.diagram)));selectDiagram('system');
 </script>

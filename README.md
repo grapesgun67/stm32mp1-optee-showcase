@@ -75,3 +75,7 @@ PYTHONPATH=.local/pdf-tools python3 scripts/build-pdf.py \
 코드 설명 재생성: `python3 scripts/build-walkthrough.py`. 공개용 서술과 발췌는 `docs/implementation-story.json`에서 관리합니다.
 
 기초 5개 장 재생성: `python3 scripts/build-fundamentals.py`. 검토한 발췌·설명은 `docs/fundamentals-story.json`, 실제 결과는 공개 evidence를 사용합니다.
+
+## 단계 명칭
+
+2026-10-05부터 **Phase 1 = OP-TEE 기반 보안 기능·실증**, **Phase 2 = Linux 서비스 보안 업데이트·복구**로 부릅니다. 과거 `p0-...` 실증 회차, `evidence/phase0` 경로, `p0-optee-portfolio.pdf` 파일명은 기록·링크 호환을 위해 유지합니다. 표시되는 단계 명칭과 과거 식별자를 구분합니다.
