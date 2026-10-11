@@ -1,0 +1,25 @@
+{
+  "entries": [
+    {
+      "id": "2026-10-11-trustzone-boundary",
+      "date": "2026-10-11",
+      "title": "TrustZone은 정상 Linux와 악성 Linux를 구분할까?",
+      "summary": "SMC 호출과 Secure 메모리 직접 접근을 혼동한 지점에서 출발해, 하드웨어 격리와 TA의 요청 인가가 서로 다른 역할임을 정리했다.",
+      "tags": ["TrustZone", "SMC", "요청 인가"],
+      "question": "정상 Linux가 OP-TEE를 사용할 수 있다면, 탈취된 Linux는 어떤 차이 때문에 하드웨어 제한에 걸리는가?",
+      "initial": "처음에는 정상 Linux는 하드웨어 제한을 통과하고 악성 Linux만 차단되는 것처럼 이해했다. 이후 TA의 검사 구현에 의존한다면 TrustZone은 개념적인 보호에 불과한 것인지 다시 질문했다.",
+      "changes": [
+        "정상 Linux와 악성 Linux 모두 Non-secure 상태에서 Secure 전용 메모리를 직접 읽을 수 없다. 하드웨어가 프로그램의 선악을 판별하는 구조가 아니다.",
+        "SMC 호출은 Linux 코드가 Secure 권한을 얻는 동작이 아니다. 정해진 Monitor·OP-TEE 코드로 실행이 넘어가고, 그 코드가 요청을 처리한다.",
+        "TF-A·OP-TEE가 보호 영역과 권한을 설정하고, 실제 메모리 접근의 허용·차단은 하드웨어가 수행한다. 올바른 설정과 설정 변경 권한의 보호가 전제다.",
+        "호출할 수 있는 서비스라는 사실과 그 요청의 실행이 승인되었다는 것은 다르다. 직접 메모리 접근은 제한해도 서비스 악용은 TA의 입력·권한 검사로 막아야 한다."
+      ],
+      "connection": "프로젝트에서는 TA 개인키를 CA에 반환하지 않는 것에 더해 외부 승인 서명을 검사한다. CA의 Enter 대기는 사용자 흐름이고, 실제 통제는 TA의 상태·파라미터·승인 검증이다. 따라서 개인키를 읽지 못해도 임의 서명을 받아내는 공격을 별도로 고려해야 한다.",
+      "code": ["handle_sign_with_approval: 승인된 요청에 대해서만 데이터 서명", "handle_delete_test_key_with_approval: 승인 검증 후 삭제 대상 확인", "clear_pending_approval: 처리에 진입한 요청을 소비"],
+      "checked": "질의응답과 기존 소스·공식 아키텍처 자료를 연결해 개념을 정리했다. 이번 기록에는 새로운 빌드나 보드 공격 시험 결과를 추가하지 않았다. 이전 여러 주제의 대화는 같은 날짜의 활동으로 소급하지 않고 별도의 종합 정리로 유지한다.",
+      "next": ["부팅 체인에서 검증 공개키와 그 신뢰 기준이 어디에 있는지 실제 플랫폼 구성과 연결하기.", "현재 보드의 보호 설정 확인과 공격 시험을 구분하고, 어떤 증거가 필요한지 정리하기."],
+      "links": [["하드웨어 격리 상세 정리", "learning/11-trustzone.html"], ["CA 인증과 요청 인가의 차이", "learning/08-authorization.html"], ["현재 공개된 승인 코드 설명", "implementation.html"]],
+      "sources": [["OP-TEE World 전환", "https://optee.readthedocs.io/en/4.0.0/architecture/core.html"], ["STM32MP1 TZC", "https://wiki.st.com/stm32mpu/wiki/TZC_internal_peripheral"]]
+    }
+  ]
+}

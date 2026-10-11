@@ -5,7 +5,8 @@ STM32MP157F-DK2 실물 보드에서 CA/TA 통신, 영속 서명 키, 외부 승�
 - **[PDF 보기 · 11쪽](downloads/p0-optee-portfolio.pdf)**
 - **[01–05 세션·메모리·해시·키 코드 설명](docs/fundamentals-walkthrough.md)**
 - **[06 승인 검증 코드 설명](docs/implementation-walkthrough.md)**
-- **[기술 학습 기록 · 12개 주제](docs/learning-index.md)** — 질문에서 이해가 바뀐 과정과 코드 연결
+- **[날짜별 학습일지](docs/journal-index.md)** — 질문과 이해의 변화를 최신순으로 기록
+- **[주제별 종합 정리 · 12개 주제](docs/learning-index.md)** — 기존 학습을 개념별로 찾아보기
 - **[실증 사례](docs/case-study.md)**
 - **[전체 시험 결과와 로그](evidence/p0-20261002T115454Z/report.md)**
 - [시험 절차 기록](docs/test-procedure.md)
@@ -57,13 +58,23 @@ python3 -m http.server 8766 --bind 127.0.0.1
 3. **Actions → Publish OP-TEE showcase → Run workflow**에서 main을 선택합니다.
 4. 완료 후 페이지·로그·PDF 링크를 확인합니다.
 
-워크플로는 수동 실행입니다. 단순 push만으로 사이트를 배포하지 않습니다. 배포 대상으로 전시용 HTML·학습 글 learning·도식 assets·evidence·downloads만 선택합니다.
+워크플로는 수동 실행입니다. 단순 push만으로 사이트를 배포하지 않습니다. 배포 대상으로 전시용 HTML·주제별 글 learning·학습일지 journal·도식 assets·evidence·downloads만 선택합니다.
 
 ## 기술 학습 기록 갱신
 
-브라우저에서는 `learning.html`을 엽니다. 각 글은 질문 → 이해의 변화 → 개념 흐름 → 코드·근거 순서입니다. 날짜는 과거 대화일을 추정하지 않고 실제 정리·보완 날짜를 사용합니다.
+브라우저에서는 **`journal.html`에서 날짜별 학습일지**, **`learning.html`에서 주제별 종합 정리**를 읽습니다. 로컬 서버를 열었다면 `http://localhost:8766/journal.html`을 사용합니다.
 
-검토한 공개 서술의 원본은 `docs/learning-notes.json`입니다. 원본을 수정한 뒤 다음 명령으로 HTML과 GitHub용 Markdown을 함께 갱신합니다. private 저장소나 대화 원문을 자동 수집하지 않습니다.
+일지는 최신 날짜부터 월별로 모아 보여줍니다. 각 글은 질문 → 처음 이해 → 수정한 이해 → 코드 연결 → 다음 질문 순서입니다. 과거 대화일을 추정하지 않고 실제 기록 날짜를 사용합니다. 기존 12개 글을 여러 날짜의 일지로 나누어 소급하지 않습니다.
+
+### 새 학습일지 추가
+
+1. `docs/learning-journal.json`의 `entries`에 기존 항목 구조를 복사해 새 기록을 추가합니다.
+2. `id`는 `YYYY-MM-DD-영문주제` 형태의 고유 주소, `date`는 실제 기록일로 지정합니다. 본문의 질문·이해 변화·근거·다음 질문을 실제 활동에 맞게 씁니다.
+3. `links`의 내부 주소는 저장소 루트 기준으로 작성합니다. 공개 가능한 자료만 연결합니다.
+4. 아래 생성 명령을 실행하면 HTML·Markdown과 최신순 목록이 함께 갱신됩니다. 파일에 적힌 순서와 무관하게 날짜순으로 정렬합니다.
+5. 기존 글을 보완하면 최초 `date`와 `id`는 유지하고 선택 필드 `updated`에 실제 보완일을 적습니다. 새로운 날의 별도 학습은 새 항목으로 남깁니다.
+
+주제별 종합 정리의 원본은 `docs/learning-notes.json`, 날짜별 일지의 원본은 `docs/learning-journal.json`입니다. 다음 명령으로 모두 생성합니다. private 저장소나 대화 원문을 자동 수집하지 않습니다.
 
 ```bash
 python3 scripts/build-learning.py

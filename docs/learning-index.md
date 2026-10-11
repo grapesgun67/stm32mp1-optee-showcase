@@ -4,7 +4,7 @@
 
 정리일: 2026-10-11
 
-[브라우저로 읽기](../learning.html)
+[브라우저로 읽기](../learning.html) · [날짜별 학습일지](journal-index.md)
 
 - [01 clone한 코드가 보드에서 실행되기까지](learning/01-build.md)
 
