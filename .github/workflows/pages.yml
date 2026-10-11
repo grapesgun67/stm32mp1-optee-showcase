@@ -23,8 +23,9 @@ jobs:
       - name: Prepare public site
         run: |
           mkdir -p _site
-          cp index.html report.html case-study.html guide.html fundamentals.html implementation.html .nojekyll _site/
-          cp -R evidence downloads assets _site/
+          cp index.html report.html case-study.html guide.html fundamentals.html implementation.html learning.html .nojekyll _site/
+          cp -R evidence downloads assets learning _site/
+          test -f _site/learning/11-trustzone.html
           test -f _site/downloads/p0-optee-portfolio.pdf
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="OP-TEE 구현 과정의 질문, 이해의 변화, 관련 코드와 근거를 연결한 기술 학습 기록">
+<title>clone한 코드가 보드에서 실행되기까지 — DEVICE TRUST LAB</title><style>
+:root{--ink:#102e32;--muted:#50666a;--green:#176650;--line:#d9ded8;--paper:#f6f4ef}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.85 system-ui,sans-serif;word-break:keep-all;overflow-wrap:anywhere}
+main,footer{max-width:1080px;margin:auto;padding:30px 24px}a{color:var(--green);text-underline-offset:4px}nav{display:flex;flex-wrap:wrap;gap:14px;font-size:14px}
+h1{font-size:clamp(30px,4.5vw,48px);line-height:1.3;letter-spacing:-.035em;max-width:900px}h2{font-size:25px;line-height:1.5}h3{font-size:19px;line-height:1.6}
+.eyebrow{font-size:12px;letter-spacing:.13em;color:var(--green);margin-top:48px}.lead{font-size:19px;max-width:850px;color:var(--muted)}.meta,small{font-size:13px;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{border:1px solid var(--line);border-radius:14px;background:white;padding:24px}.card h2{font-size:22px;margin:8px 0}.card p{margin:8px 0}.card small{display:block}
+.route{background:var(--ink);color:white;border-radius:14px;padding:22px;margin:28px 0}.route a{color:#b7ead3}.route p{margin:6px 0}
+section{padding:28px 0;border-bottom:1px solid var(--line);scroll-margin-top:16px}.qa{max-width:880px;margin:26px 0}.qa p{margin-top:8px}.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:0;list-style:none}.flow li{padding:16px;background:#e4eee7;border-radius:10px;font-size:14px}.flow b{display:block;color:var(--green);margin-bottom:6px}
+.change{background:white;border-left:4px solid var(--green);padding:20px 24px}.back{display:inline-block;padding:5px 12px;border:1px solid var(--line);border-radius:24px;font-size:13px;margin-top:14px}code{font-size:13px;word-break:break-word}details{padding:18px 0}summary{cursor:pointer;font-weight:600}li{margin:6px 0}a:focus-visible,summary:focus-visible{outline:3px solid #d9a13b;outline-offset:4px}.next{justify-content:space-between;margin-top:28px}footer{font-size:13px;color:var(--muted)}
+@media(max-width:680px){.cards,.flow{grid-template-columns:1fr}main,footer{padding:22px 18px}.eyebrow{margin-top:30px}}
+@media print{nav,.back,.next{display:none}body{background:white}.cards,.flow{grid-template-columns:1fr}section{break-inside:auto}.qa{break-inside:avoid}h1{font-size:28px}}
+</style></head><body>
+<main><nav aria-label="페이지 탐색"><a href="../index.html">실증 포트폴리오</a><a href="../fundamentals.html">구현 설명</a><a href="../learning.html">기술 학습 기록</a></nav>
+<p class="eyebrow">LEARNING NOTES / 01 · 개발 환경</p><h1>clone한 코드가 보드에서 실행되기까지</h1>
+<p class="meta">정리일 <time datetime="2026-10-11">2026-10-11</time> · 소스 대조 bdb8bd8</p>
+<nav id="toc" aria-label="본문 목차"><a href="#question">질문의 출발점</a><a href="#understanding">정리한 이해</a><a href="#code">코드와 연결</a></nav>
+<section id="question"><h2>질문의 출발점</h2><p class="lead">소스와 커밋 저장소는 왜 분리했으며, CA/TA를 바꿀 때마다 전체 이미지를 만들어야 할까?</p><div class="change"><strong>이해가 바뀐 지점</strong><p>portfolio-hello를 레이어로 생각했던 질문에서 출발해, 자체 레이어·레시피·패키지·전체 이미지를 구분했다. 새 터미널의 환경 초기화와 같은 터미널의 반복 빌드도 분리했다.</p></div><a class="back" href="#toc">↑ 목차로</a></section>
+<section id="understanding"><h2>정리한 이해</h2><ol class="flow" aria-label="개념 흐름"><li><b>01</b>Git의 자체 소스·설정·manifest</li><li><b>02</b>Yocto 환경과 의존성</li><li><b>03</b>CA·TA 패키지</li><li><b>04</b>이미지 또는 보드 패키지 갱신</li></ol>
+<div class="qa"><h3>clone만 하면 바로 빌드할 수 있는가?</h3><p>개발 저장소는 고정 manifest와 설정·자체 레이어를 보관한다. 처음에는 외부 원본 소스 복원, 호스트 의존성 준비, 사용자 EULA 수락과 환경 초기화가 필요하다. 이 공개 전시 저장소는 Yocto 빌드 저장소가 아니다.</p></div>
+<div class="qa"><h3>portfolio-hello는 레이어인가?</h3><p>meta-portfolio가 레이어이고 portfolio-hello_1.0.bb는 레시피다. 레시피 작성은 개발자의 작업이다. 패키지를 만드는 것과 st-image-weston 이미지에 설치 대상으로 포함하는 것은 별도 단계다.</p></div>
+<div class="qa"><h3>언제 전체 이미지를 만드는가?</h3><p>CA/TA 반복 개발은 해당 레시피의 패키지를 빌드해 보드에 갱신할 수 있다. 새 SD 배포 이미지가 필요하면 전체 이미지 타깃을 빌드한다. BitBake는 재사용 가능한 작업까지 무조건 처음부터 다시 수행하지 않는다.</p></div>
+<div class="qa"><h3>무엇을 확인해야 실제 포함을 말할 수 있는가?</h3><p>활성 BUILDDIR, 이미지 manifest의 패키지 항목, oe-pkgdata-util의 설치 파일 목록, 보드의 설치 버전과 실행 결과를 차례로 확인한다. 다른 빌드 디렉터리의 local.conf를 고치면 원하는 빌드에 반영되지 않을 수 있다.</p></div>
+<div class="qa"><h3>링크와 실행 파일은 어떻게 조사했는가?</h3><p>DEPENDS와 링크 옵션을 확인하고, deb를 임시 위치에 풀어 내부 ELF에 readelf -d를 사용하면 NEEDED 항목을 확인할 수 있다. deb 자체는 ELF가 아니므로 readelf로 직접 분석하지 않는다.</p></div>
+<a class="back" href="#toc">↑ 목차로</a></section>
+<section id="code"><h2>코드와 연결</h2><p>개발 저장소의 portfolio-hello 기준 함수·파일입니다. 공개된 기존 발췌는 별도의 과거 스냅샷이며 함수명이 다를 수 있습니다.</p><ul><li><code>portfolio-hello_1.0.bb: 의존성, 컴파일, 설치</code></li><li><code>env.sh / scripts/setup.py: 개발 저장소의 환경 준비</code></li></ul>
+<ul><li><a href="../guide.html">기존 배포·시험 절차</a></li><li><a href="../report.html">보드 실증</a></li></ul>
+<details><summary>근거와 확인 범위</summary><p>기존 공개 환경 로그는 패키지 1.0-r0.10과 설치 파일을 기록한다. 새로운 빌드 재현 시험을 이번 문서 작성 중 수행한 것은 아니다.</p><ul></ul></details>
+<details><summary>다음에 더 확인할 질문</summary><p>새 패키지 설치와 부팅 이미지 갱신의 차이를 파일 경로로 설명할 수 있는가?</p></details><a class="back" href="#toc">↑ 목차로</a></section>
+<nav class="next" aria-label="글 순서"><a href="../learning.html">전체 목록</a><a href="02-call-path.html">다음 글 →</a></nav></main><footer>질의응답과 개발 기록을 바탕으로 정리하고 AI 검토를 활용했습니다. 개인별 코드 기여나 과거 설계 의도를 추정하지 않습니다.</footer></body></html>

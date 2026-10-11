@@ -5,6 +5,7 @@ STM32MP157F-DK2 실물 보드에서 CA/TA 통신, 영속 서명 키, 외부 승�
 - **[PDF 보기 · 11쪽](downloads/p0-optee-portfolio.pdf)**
 - **[01–05 세션·메모리·해시·키 코드 설명](docs/fundamentals-walkthrough.md)**
 - **[06 승인 검증 코드 설명](docs/implementation-walkthrough.md)**
+- **[기술 학습 기록 · 12개 주제](docs/learning-index.md)** — 질문에서 이해가 바뀐 과정과 코드 연결
 - **[실증 사례](docs/case-study.md)**
 - **[전체 시험 결과와 로그](evidence/p0-20261002T115454Z/report.md)**
 - [시험 절차 기록](docs/test-procedure.md)
@@ -56,7 +57,19 @@ python3 -m http.server 8766 --bind 127.0.0.1
 3. **Actions → Publish OP-TEE showcase → Run workflow**에서 main을 선택합니다.
 4. 완료 후 페이지·로그·PDF 링크를 확인합니다.
 
-워크플로는 수동 실행입니다. 단순 push만으로 사이트를 배포하지 않습니다. 배포 대상으로 전시용 HTML·도식 assets·evidence·downloads만 선택합니다.
+워크플로는 수동 실행입니다. 단순 push만으로 사이트를 배포하지 않습니다. 배포 대상으로 전시용 HTML·학습 글 learning·도식 assets·evidence·downloads만 선택합니다.
+
+## 기술 학습 기록 갱신
+
+브라우저에서는 `learning.html`을 엽니다. 각 글은 질문 → 이해의 변화 → 개념 흐름 → 코드·근거 순서입니다. 날짜는 과거 대화일을 추정하지 않고 실제 정리·보완 날짜를 사용합니다.
+
+검토한 공개 서술의 원본은 `docs/learning-notes.json`입니다. 원본을 수정한 뒤 다음 명령으로 HTML과 GitHub용 Markdown을 함께 갱신합니다. private 저장소나 대화 원문을 자동 수집하지 않습니다.
+
+```bash
+python3 scripts/build-learning.py
+```
+
+원문과 생성 파일을 검토하여 함께 커밋·push한 뒤 기존 **Publish OP-TEE showcase** 워크플로를 수동 실행합니다. PDF는 기존 실증 중심 구성을 유지하며 이번 학습 글은 웹과 Markdown으로 제공합니다.
 
 ## PDF 갱신
 

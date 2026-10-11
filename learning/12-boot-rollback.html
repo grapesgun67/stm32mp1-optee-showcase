@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="OP-TEE 구현 과정의 질문, 이해의 변화, 관련 코드와 근거를 연결한 기술 학습 기록">
+<title>Secure Boot와 롤백 방지는 어디서 시작되는가 — DEVICE TRUST LAB</title><style>
+:root{--ink:#102e32;--muted:#50666a;--green:#176650;--line:#d9ded8;--paper:#f6f4ef}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.85 system-ui,sans-serif;word-break:keep-all;overflow-wrap:anywhere}
+main,footer{max-width:1080px;margin:auto;padding:30px 24px}a{color:var(--green);text-underline-offset:4px}nav{display:flex;flex-wrap:wrap;gap:14px;font-size:14px}
+h1{font-size:clamp(30px,4.5vw,48px);line-height:1.3;letter-spacing:-.035em;max-width:900px}h2{font-size:25px;line-height:1.5}h3{font-size:19px;line-height:1.6}
+.eyebrow{font-size:12px;letter-spacing:.13em;color:var(--green);margin-top:48px}.lead{font-size:19px;max-width:850px;color:var(--muted)}.meta,small{font-size:13px;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{border:1px solid var(--line);border-radius:14px;background:white;padding:24px}.card h2{font-size:22px;margin:8px 0}.card p{margin:8px 0}.card small{display:block}
+.route{background:var(--ink);color:white;border-radius:14px;padding:22px;margin:28px 0}.route a{color:#b7ead3}.route p{margin:6px 0}
+section{padding:28px 0;border-bottom:1px solid var(--line);scroll-margin-top:16px}.qa{max-width:880px;margin:26px 0}.qa p{margin-top:8px}.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:0;list-style:none}.flow li{padding:16px;background:#e4eee7;border-radius:10px;font-size:14px}.flow b{display:block;color:var(--green);margin-bottom:6px}
+.change{background:white;border-left:4px solid var(--green);padding:20px 24px}.back{display:inline-block;padding:5px 12px;border:1px solid var(--line);border-radius:24px;font-size:13px;margin-top:14px}code{font-size:13px;word-break:break-word}details{padding:18px 0}summary{cursor:pointer;font-weight:600}li{margin:6px 0}a:focus-visible,summary:focus-visible{outline:3px solid #d9a13b;outline-offset:4px}.next{justify-content:space-between;margin-top:28px}footer{font-size:13px;color:var(--muted)}
+@media(max-width:680px){.cards,.flow{grid-template-columns:1fr}main,footer{padding:22px 18px}.eyebrow{margin-top:30px}}
+@media print{nav,.back,.next{display:none}body{background:white}.cards,.flow{grid-template-columns:1fr}section{break-inside:auto}.qa{break-inside:avoid}h1{font-size:28px}}
+</style></head><body>
+<main><nav aria-label="페이지 탐색"><a href="../index.html">실증 포트폴리오</a><a href="../fundamentals.html">구현 설명</a><a href="../learning.html">기술 학습 기록</a></nav>
+<p class="eyebrow">LEARNING NOTES / 12 · 신뢰 사슬</p><h1>Secure Boot와 롤백 방지는 어디서 시작되는가</h1>
+<p class="meta">정리일 <time datetime="2026-10-11">2026-10-11</time> · 소스 대조 bdb8bd8</p>
+<nav id="toc" aria-label="본문 목차"><a href="#question">질문의 출발점</a><a href="#understanding">정리한 이해</a><a href="#code">코드와 연결</a></nav>
+<section id="question"><h2>질문의 출발점</h2><p class="lead">검사 코드와 기준도 되돌릴 수 있다면 롤백 방지는 불가능한가?</p><div class="change"><strong>이해가 바뀐 지점</strong><p>버전 숫자만 추가하는 방안에서, 되돌릴 수 없는 기준과 검사 코드의 보호가 함께 필요하다는 점으로 확장했다. Boot ROM 작성과 제품 Secure Boot 통합 업무도 구분했다.</p></div><a class="back" href="#toc">↑ 목차로</a></section>
+<section id="understanding"><h2>정리한 이해</h2><ol class="flow" aria-label="개념 흐름"><li><b>01</b>Boot ROM·보호된 신뢰 기준</li><li><b>02</b>검증된 부트 체인</li><li><b>03</b>OP-TEE·TA 검증</li><li><b>04</b>보호된 버전 기준과 비교</li></ol>
+<div class="qa"><h3>Secure Boot는 무엇을 보장하는가?</h3><p>허가된 부팅 코드를 검증하고 실패 시 실행을 차단하도록 구성한다. 정상 서명된 코드의 취약점이나 실행 중 Linux 침해까지 자동으로 막지 않는다. 복구 경로도 검증 정책에 포함해야 한다.</p></div>
+<div class="qa"><h3>최초 부트로더는 누가 검증하는가?</h3><p>칩의 Boot ROM과 보호된 신뢰 기준에서 시작한다. 제품 개발은 보통 제조사 ROM 위에 TF-A·U-Boot·보안 펌웨어의 검증, 키 관리, 제조 설정과 실패 정책을 연결한다. ROM 자체 개발은 칩 설계·검증과 맞물리는 별도 영역이다.</p></div>
+<div class="qa"><h3>RPMB는 빌드하면 생기는가?</h3><p>지원 저장장치에 있는 하드웨어 영역을 소프트웨어가 사용하도록 구성한다. 인증과 쓰기 카운터로 재전송을 방어한다. RPMB 인증키는 TA의 RSA 서명키와 다르며 최초 키 등록은 되돌릴 수 없는 절차이므로 제품 제조 정책이 필요하다.</p></div>
+<div class="qa"><h3>버전 검사는 어떻게 연결하는가?</h3><p>서명으로 보호한 이미지 버전과 보호된 최소 허용 버전을 비교한다. RPMB의 쓰기 카운터를 펌웨어 버전과 동일시하지 않는다. RPMB는 기준 저장의 기반이고 실제 허용·갱신 정책은 서비스나 로더가 구현해야 한다.</p></div>
+<div class="qa"><h3>제품 적용에서 무엇이 더 필요한가?</h3><p>하드웨어 지원, OP-TEE 설정, 비밀키 공급, 부팅 코드 보호와 버전 정책, 업데이트 실패·복구 시험이 함께 필요하다. CFG_RPMB_FS=y 한 줄이나 재부팅 후 키 유지 결과만으로 전체 롤백 방지를 선언할 수 없다.</p></div>
+<a class="back" href="#toc">↑ 목차로</a></section>
+<section id="code"><h2>코드와 연결</h2><p>개발 저장소의 portfolio-hello 기준 함수·파일입니다. 공개된 기존 발췌는 별도의 과거 스냅샷이며 함수명이 다를 수 있습니다.</p><ul><li><code>현재 CA/TA 코드 밖의 플랫폼 통합 학습 범위</code></li><li><code>향후 Phase 2: 업데이트 대상·신뢰 기준·복구 정책 설계</code></li></ul>
+<ul><li><a href="../index.html#limits">공개 확인 범위</a></li><li><a href="../learning/10-ta-loading.html">TA 로딩 학습</a></li></ul>
+<details><summary>근거와 확인 범위</summary><p>Secure Boot 강제, RPMB 초기 설정, TA 버전 차단은 현재 포트폴리오의 실증 완료 항목으로 표시하지 않는다. 이번 작업에서 OTP나 키를 변경하지 않았다.</p><ul><li><a href="https://optee.readthedocs.io/en/4.0.0/architecture/secure_storage.html#rpmb-secure-storage">OP-TEE RPMB</a></li><li><a href="https://wiki.st.com/stm32mpu/wiki/How_to_enable_secure_boot_on_STM32_MPU">ST Secure Boot 적용</a></li><li><a href="https://opentitan.org/book/sw/device/silicon_creator/rom/">OpenTitan ROM 개발 사례</a></li></ul></details>
+<details><summary>다음에 더 확인할 질문</summary><p>서명된 구버전과 변조된 최신 버전을 각각 어느 검사에서 거부해야 하는가?</p></details><a class="back" href="#toc">↑ 목차로</a></section>
+<nav class="next" aria-label="글 순서"><a href="11-trustzone.html">← 이전 글</a><a href="../learning.html">전체 목록</a></nav></main><footer>질의응답과 개발 기록을 바탕으로 정리하고 AI 검토를 활용했습니다. 개인별 코드 기여나 과거 설계 의도를 추정하지 않습니다.</footer></body></html>

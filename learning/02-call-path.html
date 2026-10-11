@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="OP-TEE 구현 과정의 질문, 이해의 변화, 관련 코드와 근거를 연결한 기술 학습 기록">
+<title>CA의 호출은 누가 TA까지 전달하는가 — DEVICE TRUST LAB</title><style>
+:root{--ink:#102e32;--muted:#50666a;--green:#176650;--line:#d9ded8;--paper:#f6f4ef}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.85 system-ui,sans-serif;word-break:keep-all;overflow-wrap:anywhere}
+main,footer{max-width:1080px;margin:auto;padding:30px 24px}a{color:var(--green);text-underline-offset:4px}nav{display:flex;flex-wrap:wrap;gap:14px;font-size:14px}
+h1{font-size:clamp(30px,4.5vw,48px);line-height:1.3;letter-spacing:-.035em;max-width:900px}h2{font-size:25px;line-height:1.5}h3{font-size:19px;line-height:1.6}
+.eyebrow{font-size:12px;letter-spacing:.13em;color:var(--green);margin-top:48px}.lead{font-size:19px;max-width:850px;color:var(--muted)}.meta,small{font-size:13px;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{border:1px solid var(--line);border-radius:14px;background:white;padding:24px}.card h2{font-size:22px;margin:8px 0}.card p{margin:8px 0}.card small{display:block}
+.route{background:var(--ink);color:white;border-radius:14px;padding:22px;margin:28px 0}.route a{color:#b7ead3}.route p{margin:6px 0}
+section{padding:28px 0;border-bottom:1px solid var(--line);scroll-margin-top:16px}.qa{max-width:880px;margin:26px 0}.qa p{margin-top:8px}.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:0;list-style:none}.flow li{padding:16px;background:#e4eee7;border-radius:10px;font-size:14px}.flow b{display:block;color:var(--green);margin-bottom:6px}
+.change{background:white;border-left:4px solid var(--green);padding:20px 24px}.back{display:inline-block;padding:5px 12px;border:1px solid var(--line);border-radius:24px;font-size:13px;margin-top:14px}code{font-size:13px;word-break:break-word}details{padding:18px 0}summary{cursor:pointer;font-weight:600}li{margin:6px 0}a:focus-visible,summary:focus-visible{outline:3px solid #d9a13b;outline-offset:4px}.next{justify-content:space-between;margin-top:28px}footer{font-size:13px;color:var(--muted)}
+@media(max-width:680px){.cards,.flow{grid-template-columns:1fr}main,footer{padding:22px 18px}.eyebrow{margin-top:30px}}
+@media print{nav,.back,.next{display:none}body{background:white}.cards,.flow{grid-template-columns:1fr}section{break-inside:auto}.qa{break-inside:avoid}h1{font-size:28px}}
+</style></head><body>
+<main><nav aria-label="페이지 탐색"><a href="../index.html">실증 포트폴리오</a><a href="../fundamentals.html">구현 설명</a><a href="../learning.html">기술 학습 기록</a></nav>
+<p class="eyebrow">LEARNING NOTES / 02 · 실행 구조</p><h1>CA의 호출은 누가 TA까지 전달하는가</h1>
+<p class="meta">정리일 <time datetime="2026-10-11">2026-10-11</time> · 소스 대조 bdb8bd8</p>
+<nav id="toc" aria-label="본문 목차"><a href="#question">질문의 출발점</a><a href="#understanding">정리한 이해</a><a href="#code">코드와 연결</a></nav>
+<section id="question"><h2>질문의 출발점</h2><p class="lead">libteec, Linux TEE 드라이버, OP-TEE와 tee-supplicant는 각각 무슨 일을 할까?</p><div class="change"><strong>이해가 바뀐 지점</strong><p>tee-supplicant를 CA의 일부나 모든 요청의 중간 단계로 보는 대신, OP-TEE가 필요한 Normal World 서비스를 요청할 때 사용하는 별도 프로세스로 구분했다.</p></div><a class="back" href="#toc">↑ 목차로</a></section>
+<section id="understanding"><h2>정리한 이해</h2><ol class="flow" aria-label="개념 흐름"><li><b>01</b>CA → libteec</li><li><b>02</b>ioctl → Linux TEE 드라이버</li><li><b>03</b>SMC → Monitor → OP-TEE</li><li><b>04</b>TA → 결과 반환</li></ol>
+<div class="qa"><h3>libteec와 드라이버는 무엇이 다른가?</h3><p>CA는 TEEC API를 호출한다. libteec는 Linux TEE 인터페이스를 통해 세션·명령·메모리 정보를 전달하고, 드라이버는 커널 측 통신과 공유 메모리 처리를 담당한다. TA의 삭제 승인 정책을 드라이버가 판단하는 것은 아니다.</p></div>
+<div class="qa"><h3>RPC는 네트워크 통신인가?</h3><p>여기서는 OP-TEE가 Normal World에 작업을 요청하고 응답을 받아 처리를 재개하는 경로다. 일부 요청은 커널이 처리하고, 파일 읽기 같은 작업은 tee-supplicant가 지원한다. 노트북 승인 도구와의 파일 전송은 별도의 응용 흐름이다.</p></div>
+<div class="qa"><h3>PING이면 tee-supplicant가 전혀 필요 없는가?</h3><p>PING 처리 자체는 파일 저장을 요구하지 않지만, TA를 처음 로드할 때 REE 파일시스템의 .ta를 전달받는 데 supplicant가 관여할 수 있다. TA 로딩과 명령 본문을 나눠 생각해야 한다.</p></div>
+<div class="qa"><h3>출력의 result와 origin은 어떻게 읽는가?</h3><p>result=0은 성공 코드이며 origin은 결과가 어느 계층에서 왔는지 나타낸다. PASS/FAIL은 프로그램이 기대한 결과와 비교한 판정이다. altered data rejected는 변조한 데이터의 검증 실패를 기대한 시험이다. 명령 종료 코드는 직후에 확인해야 한다.</p></div>
+<div class="qa"><h3>프로세스와 도구는 어떻게 확인했는가?</h3><p>systemctl status로 서비스 상태, ps -ef로 프로세스, command -v로 셸이 찾는 실행 명령 위치를 확인했다. xtest의 존재는 시험 실행·성공 증거와 다르다. 예제 프로그램 부재는 optee-examples를 제외한 구성과도 구분해서 해석했다.</p></div>
+<a class="back" href="#toc">↑ 목차로</a></section>
+<section id="code"><h2>코드와 연결</h2><p>개발 저장소의 portfolio-hello 기준 함수·파일입니다. 공개된 기존 발췌는 별도의 과거 스냅샷이며 함수명이 다를 수 있습니다.</p><ul><li><code>host/main.c: invoke_command</code></li><li><code>ta/entry.c: TA_InvokeCommandEntryPoint</code></li></ul>
+<ul><li><a href="../index.html#architecture">시스템 구조</a></li><li><a href="../fundamentals.html#session">PING 코드 설명</a></li></ul>
+<details><summary>근거와 확인 범위</summary><p>기존 보드 로그의 tee-supplicant 실행·TEE 장치·PING 결과와 연결한다. 드라이버 전체 경로를 런타임 추적했다는 의미는 아니다.</p><ul><li><a href="https://docs.kernel.org/tee/op-tee.html">Linux OP-TEE 인터페이스</a></li></ul></details>
+<details><summary>다음에 더 확인할 질문</summary><p>ioctl, SMC, RPC를 각각 어느 경계를 넘는 호출인지 설명할 수 있는가?</p></details><a class="back" href="#toc">↑ 목차로</a></section>
+<nav class="next" aria-label="글 순서"><a href="01-build.html">← 이전 글</a><a href="03-session.html">다음 글 →</a></nav></main><footer>질의응답과 개발 기록을 바탕으로 정리하고 AI 검토를 활용했습니다. 개인별 코드 기여나 과거 설계 의도를 추정하지 않습니다.</footer></body></html>

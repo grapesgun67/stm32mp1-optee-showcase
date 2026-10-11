@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="OP-TEE 구현 과정의 질문, 이해의 변화, 관련 코드와 근거를 연결한 기술 학습 기록">
+<title>정상 Linux도 Secure 메모리를 직접 읽지 못한다 — DEVICE TRUST LAB</title><style>
+:root{--ink:#102e32;--muted:#50666a;--green:#176650;--line:#d9ded8;--paper:#f6f4ef}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.85 system-ui,sans-serif;word-break:keep-all;overflow-wrap:anywhere}
+main,footer{max-width:1080px;margin:auto;padding:30px 24px}a{color:var(--green);text-underline-offset:4px}nav{display:flex;flex-wrap:wrap;gap:14px;font-size:14px}
+h1{font-size:clamp(30px,4.5vw,48px);line-height:1.3;letter-spacing:-.035em;max-width:900px}h2{font-size:25px;line-height:1.5}h3{font-size:19px;line-height:1.6}
+.eyebrow{font-size:12px;letter-spacing:.13em;color:var(--green);margin-top:48px}.lead{font-size:19px;max-width:850px;color:var(--muted)}.meta,small{font-size:13px;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{border:1px solid var(--line);border-radius:14px;background:white;padding:24px}.card h2{font-size:22px;margin:8px 0}.card p{margin:8px 0}.card small{display:block}
+.route{background:var(--ink);color:white;border-radius:14px;padding:22px;margin:28px 0}.route a{color:#b7ead3}.route p{margin:6px 0}
+section{padding:28px 0;border-bottom:1px solid var(--line);scroll-margin-top:16px}.qa{max-width:880px;margin:26px 0}.qa p{margin-top:8px}.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:0;list-style:none}.flow li{padding:16px;background:#e4eee7;border-radius:10px;font-size:14px}.flow b{display:block;color:var(--green);margin-bottom:6px}
+.change{background:white;border-left:4px solid var(--green);padding:20px 24px}.back{display:inline-block;padding:5px 12px;border:1px solid var(--line);border-radius:24px;font-size:13px;margin-top:14px}code{font-size:13px;word-break:break-word}details{padding:18px 0}summary{cursor:pointer;font-weight:600}li{margin:6px 0}a:focus-visible,summary:focus-visible{outline:3px solid #d9a13b;outline-offset:4px}.next{justify-content:space-between;margin-top:28px}footer{font-size:13px;color:var(--muted)}
+@media(max-width:680px){.cards,.flow{grid-template-columns:1fr}main,footer{padding:22px 18px}.eyebrow{margin-top:30px}}
+@media print{nav,.back,.next{display:none}body{background:white}.cards,.flow{grid-template-columns:1fr}section{break-inside:auto}.qa{break-inside:avoid}h1{font-size:28px}}
+</style></head><body>
+<main><nav aria-label="페이지 탐색"><a href="../index.html">실증 포트폴리오</a><a href="../fundamentals.html">구현 설명</a><a href="../learning.html">기술 학습 기록</a></nav>
+<p class="eyebrow">LEARNING NOTES / 11 · 하드웨어 격리</p><h1>정상 Linux도 Secure 메모리를 직접 읽지 못한다</h1>
+<p class="meta">정리일 <time datetime="2026-10-11">2026-10-11</time> · 소스 대조 bdb8bd8</p>
+<nav id="toc" aria-label="본문 목차"><a href="#question">질문의 출발점</a><a href="#understanding">정리한 이해</a><a href="#code">코드와 연결</a></nav>
+<section id="question"><h2>질문의 출발점</h2><p class="lead">정상 Linux는 제한을 통과하고 탈취된 Linux만 차단되는 것인가?</p><div class="change"><strong>이해가 바뀐 지점</strong><p>하드웨어가 정상·악성 커널을 판별한다는 혼동을 해소했다. 둘 다 직접 접근은 제한되고, SMC를 통해 정해진 Secure 코드에 작업을 요청한다는 구조로 이해를 수정했다.</p></div><a class="back" href="#toc">↑ 목차로</a></section>
+<section id="understanding"><h2>정리한 이해</h2><ol class="flow" aria-label="개념 흐름"><li><b>01</b>정상·악성 Linux: Non-secure</li><li><b>02</b>직접 Secure 메모리 접근: 차단</li><li><b>03</b>SMC: 정해진 Secure 코드 실행</li><li><b>04</b>TA: 요청 형식·권한 판단</li></ol>
+<div class="qa"><h3>Linux root가 왜 칩 전체의 최고 권한이 아닌가?</h3><p>root는 Linux의 사용자 권한이다. 커널을 장악해도 Non-secure 실행 상태에서의 권한이며 Secure 상태를 임의로 얻는 것은 아니다. Cortex-A7에서는 Monitor가 World 전환을 중개한다.</p></div>
+<div class="qa"><h3>보호를 코드로 구현해야 하는가?</h3><p>TF-A·OP-TEE 같은 보안 펌웨어가 보호 영역을 설정하고, 이후 메모리 접근은 하드웨어가 강제한다. TA가 매 접근마다 if문으로 Linux 읽기를 막는 것이 아니다. 올바른 설정과 보호된 설정 변경 권한이 전제다.</p></div>
+<div class="qa"><h3>TZC가 악성 SMC를 판별하는가?</h3><p>TZC는 DDR 주소·읽기/쓰기·보안 속성 등의 접근 조건을 확인한다. SMC의 업무 명령이나 승인 서명을 이해하지 않는다. Linux의 페이지 테이블만 바꿔도 이 하드웨어 조건은 사라지지 않는다.</p></div>
+<div class="qa"><h3>SMC를 보내면 Linux가 Secure 권한을 얻는가?</h3><p>Linux 코드는 중단되고 정해진 Monitor·OP-TEE 코드가 실행된다. 호출 인자는 그 코드가 검증할 입력이다. 승인된 서비스 호출과 요청자가 마음대로 Secure 코드를 실행하는 것은 다르다.</p></div>
+<div class="qa"><h3>그렇다면 시큐어 코딩은 왜 필요한가?</h3><p>하드웨어는 직접 접근을 막는다. 하지만 TA가 악성 입력에 속아 개인키를 복사하거나 승인 없이 서명하면 서비스 경로로 악용된다. 격리와 입력·권한 검사는 서로 다른 공격 경로를 막는다.</p></div>
+<a class="back" href="#toc">↑ 목차로</a></section>
+<section id="code"><h2>코드와 연결</h2><p>개발 저장소의 portfolio-hello 기준 함수·파일입니다. 공개된 기존 발췌는 별도의 과거 스냅샷이며 함수명이 다를 수 있습니다.</p><ul><li><code>ta/entry.c: TA_InvokeCommandEntryPoint의 명령 분기</code></li><li><code>ta/entry.c: handle_sign_with_approval의 승인 검사</code></li></ul>
+<ul><li><a href="../learning/08-authorization.html">요청 인가 학습</a></li><li><a href="../index.html#architecture">서비스 구조</a></li></ul>
+<details><summary>근거와 확인 범위</summary><p>이번 내용은 공식 아키텍처와 프로젝트 요청 검사를 연결한 이론 정리다. 실제 보드의 TZC 레지스터·DMA·디버그 보호를 공격 시험으로 검증했다는 의미는 아니다.</p><ul><li><a href="https://optee.readthedocs.io/en/4.0.0/architecture/core.html">OP-TEE의 World 전환</a></li><li><a href="https://wiki.st.com/stm32mpu/wiki/TZC_internal_peripheral">STM32MP1 TZC</a></li><li><a href="https://wiki.st.com/stm32mpu/wiki/ETZPC_internal_peripheral">STM32MP1 ETZPC</a></li></ul></details>
+<details><summary>다음에 더 확인할 질문</summary><p>개인키를 직접 읽는 공격과 키를 이용해 서명받는 공격의 방어를 각각 설명할 수 있는가?</p></details><a class="back" href="#toc">↑ 목차로</a></section>
+<nav class="next" aria-label="글 순서"><a href="10-ta-loading.html">← 이전 글</a><a href="12-boot-rollback.html">다음 글 →</a></nav></main><footer>질의응답과 개발 기록을 바탕으로 정리하고 AI 검토를 활용했습니다. 개인별 코드 기여나 과거 설계 의도를 추정하지 않습니다.</footer></body></html>
