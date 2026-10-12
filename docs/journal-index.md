@@ -4,4 +4,10 @@
 
 [브라우저로 읽기](../journal.html)
 
+- 2026-10-12 — [내부 복사·요청 소비·키 지문은 각각 무엇을 지키는가](journal/2026-10-12-03-copy-consume.md)
+
+- 2026-10-12 — [공개키를 신뢰하는 것과 RSA 서명을 검증하는 것은 다르다](journal/2026-10-12-02-rsa-trust.md)
+
+- 2026-10-12 — [삭제 승인이 있어도 키를 바로 삭제할 수 없는 이유](journal/2026-10-12-01-key-lifecycle.md)
+
 - 2026-10-11 — [TrustZone은 정상 Linux와 악성 Linux를 구분할까?](journal/2026-10-11-trustzone-boundary.md)

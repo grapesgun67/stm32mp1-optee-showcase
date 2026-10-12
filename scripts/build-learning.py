@@ -113,6 +113,13 @@ for i, entry in enumerate(entries):
         ('connection', '내 구현과 연결한 부분', '<p>'+e(entry['connection'])+'</p>'+bullet(entry['code'], True)+links_html(entry['links'], '../')),
         ('next', '다음에 확인할 것', bullet(entry['next']))
     ]
+    # Detailed cases supplement the short summary without flattening a long lesson.
+    topics = entry.get('topics', [])
+    sections[2:2] = [
+        (f'case-{j+1}', topic['title'],
+         ''.join('<p>'+e(p)+'</p>' for p in topic['paragraphs']))
+        for j, topic in enumerate(topics)
+    ]
     body = [f'<p class="eyebrow">STUDY JOURNAL / {e(entry["date"])}</p><h1>{e(entry["title"])}</h1><p class="meta">{stamp}</p><p class="lead">{e(entry["summary"])}</p>',
             '<p class="tags">'+e(' · '.join(entry['tags']))+'</p>',
             '<nav id="toc" aria-label="일지 목차">'+''.join(f'<a href="#{key}">{title}</a>' for key,title,_ in sections)+'</nav>']
@@ -128,8 +135,10 @@ for i, entry in enumerate(entries):
     (jout / f'{entry["id"]}.html').write_text(shell(entry['title'], '\n'.join(body), '../'))
     md = [f'# {entry["title"]}', '기록일: '+entry['date']+(' · 보완일: '+entry['updated'] if entry.get('updated') else ''), entry['summary'],
           '## 공부를 시작한 질문', entry['question'], '### 처음 이해했던 내용',entry['initial'],
-          '## 질의응답에서 수정한 이해','\n'.join('- '+s for s in entry['changes']),
-          '## 내 구현과 연결한 부분',entry['connection'],'\n'.join('- '+s for s in entry['code'])]
+          '## 질의응답에서 수정한 이해','\n'.join('- '+s for s in entry['changes'])]
+    for topic in topics:
+        md += ['## '+topic['title'], *topic['paragraphs']]
+    md += ['## 내 구현과 연결한 부분',entry['connection'],'\n'.join('- '+s for s in entry['code'])]
     md += [f'- [{label}]({url if url.startswith("https://") else "../../"+url})' for label,url in entry['links']]
     md += ['## 다음에 확인할 것','\n'.join('- '+s for s in entry['next']), '## 확인한 자료와 기록 범위',entry['checked']]
     md += [f'- [{label}]({url})' for label,url in entry['sources']]
